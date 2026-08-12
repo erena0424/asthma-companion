@@ -73,7 +73,8 @@
   --font-body-size: clamp(12px, 4vw, 20px);
   --font-body-weight: 400;
 
-  --font-small-size: clamp(8px, 3vw, 20px);
+  --font-note-size: clamp(8px, 3vw, 20px);
+  --font-small-size: clamp(12px, 4vw, 20px);
 
   /* LargeButton_Text — Abril Fatface, Regular, 36 */
   --font-large-button-family: "Abril Fatface", serif;
@@ -640,10 +641,14 @@ hr {
 
 .absolute-top-right {
   position: absolute;
-  top: clamp(1.25rem, 3vw, 2rem);
-  right: clamp(1.25rem, 3vw, 2rem);
+  top: clamp(0.25rem, 2vw, 2rem);
+  right: clamp(0.25rem, 2vw, 2rem);
 
   z-index: 10;
+}
+
+.avoid-right {
+  padding-right: clamp(1rem, 2.5vw, 3rem);
 }
 
 .progress-row {
@@ -1328,6 +1333,48 @@ input::-webkit-password-reveal-button {
 }
 
 /***************************************** TEXT ********************************************/
+h1 {
+  font-family: var(--font-header-family);
+  font-size: var(--font-header-size);
+  font-weight: var(--font-header-weight);
+  
+  line-height: var(--font-header-size);
+  margin: 0;
+}
+
+h2 {
+  font-family: var(--font-section-header-family);
+  font-size: var(--font-section-header-size);
+  font-weight: var(--font-section-header-weight);
+  
+  line-height: var(--font-section-header-size);
+  margin: 0;
+}
+
+h3 {
+  font-family: var(--font-section-text-family);
+  font-size: var(--font-section-text-size);
+  font-weight: var(--font-section-text-weight);
+  
+  line-height: var(--font-section-text-size);
+  margin: 0;
+}
+
+p, li {
+  font-family: var(--font-body-family);
+  font-size: var(--font-body-size);
+  font-weight: var(--font-body-weight);
+  
+  line-height: var(--font-body-size);
+  margin: 0;
+}
+
+ul, ol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
 /* Header */
 .header-text {
   font-family: var(--font-header-family);
@@ -1345,6 +1392,15 @@ input::-webkit-password-reveal-button {
   font-weight: var(--font-section-header-weight);
   
   line-height: var(--font-section-header-size);
+  margin: 0;
+}
+
+.section-header-text-small {
+  font-family: var(--font-section-header-family);
+  font-size: 30px;
+  font-weight: var(--font-section-header-weight);
+  
+  line-height: 30px;
   margin: 0;
 }
 
@@ -1411,11 +1467,17 @@ input::-webkit-password-reveal-button {
 }
 
 .note {
+  font-size: var(--font-note-size) !important;
+  line-height: var(--font-note-size) !important;
+  margin-top: var(--font-note-size) !important;
+  
+  font-style: italic;
+}
+
+.small-text {
   font-size: var(--font-small-size) !important;
   line-height: var(--font-small-size) !important;
   margin-top: var(--font-small-size) !important;
-  
-  font-style: italic;
 }
 
 .title {
@@ -1429,48 +1491,6 @@ input::-webkit-password-reveal-button {
 
 .paragraph {
   line-height: calc( (var(--font-body-size) + 5px) );
-}
-
-h1 {
-  font-family: var(--font-header-family);
-  font-size: var(--font-header-size);
-  font-weight: var(--font-header-weight);
-  
-  line-height: var(--font-header-size);
-  margin: 0;
-}
-
-h2 {
-  font-family: var(--font-section-header-family);
-  font-size: var(--font-section-header-size);
-  font-weight: var(--font-section-header-weight);
-  
-  line-height: var(--font-section-header-size);
-  margin: 0;
-}
-
-h3 {
-  font-family: var(--font-section-text-family);
-  font-size: var(--font-section-text-size);
-  font-weight: var(--font-section-text-weight);
-  
-  line-height: var(--font-section-text-size);
-  margin: 0;
-}
-
-p, li {
-  font-family: var(--font-body-family);
-  font-size: var(--font-body-size);
-  font-weight: var(--font-body-weight);
-  
-  line-height: var(--font-body-size);
-  margin: 0;
-}
-
-ul, ol {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-16);
 }
 
 /***************************** ANIMATIONS ***************************************/

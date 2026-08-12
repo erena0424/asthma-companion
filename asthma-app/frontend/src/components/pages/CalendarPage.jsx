@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useCalendar } from "../../context/CalendarContext";
 import "./CalendarPage.css";
 import CalendarConnectionPanel from "../calendar/CalendarConnectionPanel";
+import CalendarModal from "../calendar/CalendarModal";
 import SpinnerOverlay from "../input/SpinnerOverlay";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -116,27 +117,19 @@ function CalendarPage() {
     setCurrentMonth(new Date(year, monthIndex + 1, 1));
   }
 
-  function openDate(dateKey) {
+  function isFutureDate(dateKey) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [selectedYear, selectedMonth, selectedDay] = dateKey
-      .split("-")
-      .map(Number);
+    const [year, month, day] = dateKey.split("-").map(Number);
 
-    const selected = new Date(
-      selectedYear,
-      selectedMonth - 1,
-      selectedDay
-    );
+    const date = new Date(year, month - 1, day);
+    date.setHours(0, 0, 0, 0);
 
-    selected.setHours(0, 0, 0, 0);
+    return date > today;
+  }
 
-    if (selected > today) {
-      setError("You can only record check-ins for today or previous days.");
-      return;
-    }
-
+  function openDate(dateKey) {
     const existingCheckIn = checkInsByDate[dateKey];
 
     setSelectedDate(dateKey);
@@ -179,8 +172,9 @@ function CalendarPage() {
 
   async function handleSave(event) {
     event.preventDefault();
-
     if (!selectedDate || !token) return;
+
+    const future = isFutureDate(selectedDate);
 
     const triggers = formData.triggers
       .split(",")
@@ -195,11 +189,29 @@ function CalendarPage() {
       const saved = await saveCalendarCheckIn({
         checkIn: {
           date: selectedDate,
-          daily_day_symp: formData.daily_day_symp,
-          daily_night_symp: formData.daily_night_symp,
-          daily_limit_activity: formData.daily_limit_activity,
-          notes: formData.notes.trim() || null,
-          triggers: triggers.length > 0 ? triggers : null,
+
+          daily_day_symp: future
+            ? false
+            : formData.daily_day_symp,
+
+          daily_night_symp: future
+            ? false
+            : formData.daily_night_symp,
+
+          daily_limit_activity: future
+            ? false
+            : formData.daily_limit_activity,
+
+          notes: future
+            ? null
+            : formData.notes.trim() || null,
+
+          triggers: future
+            ? null
+            : triggers.length > 0
+              ? triggers
+              : null,
+
           calendar_event: formData.calendar_event.trim() || null,
         },
       });
@@ -241,17 +253,16 @@ function CalendarPage() {
 
   for (let day = 1; day <= daysInMonth; day += 1) {
     const dateKey = formatDateKey(year, monthIndex, day);
-    const hasCheckIn = Boolean(checkInsByDate[dateKey]);
+    const checkIn = checkInsByDate[dateKey];
+
+    const hasCheckIn =
+      Boolean(checkIn?.notes?.trim()) ||
+      (Array.isArray(checkIn?.triggers) && checkIn.triggers.length > 0);
+
+
     const hasGoogleEvent = calendarStatus.connected && Boolean(googleEventsByDate[dateKey]);
     const isToday = dateKey === todayKey;
-
-    const dateObject = new Date(year, monthIndex, day);
-    dateObject.setHours(0, 0, 0, 0);
-
-    const todayComparison = new Date();
-    todayComparison.setHours(0, 0, 0, 0);
-
-    const isFutureDate = dateObject > todayComparison;
+    const isFuture = isFutureDate(dateKey);
 
     calendarCells.push(
       <button
@@ -268,8 +279,7 @@ function CalendarPage() {
         onClick={() => openDate(dateKey)}
         aria-label={`${formatReadableDate(dateKey)}${
           hasCheckIn ? ", check-in recorded" : ""
-        }${isFutureDate ? ", future date unavailable" : ""}`}
-        aria-disabled={isFutureDate}
+          }${isFutureDate ? ", future date" : ""}`}
       >
         <span className="calendar-day-number">{day}</span>
 
@@ -373,164 +383,24 @@ function CalendarPage() {
         )}
       </section>
 
-      {selectedDate && (
-        <div
-          className="check-in-modal-overlay"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              closeModal();
-            }
-          }}
-        >
-          <section
-            className="check-in-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="check-in-modal-title"
-          >
-            <div className="check-in-modal-header">
-              <div>
-                <p className="check-in-modal-label">Daily check-in</p>
-
-                <h2 id="check-in-modal-title">
-                  {formatReadableDate(selectedDate)}
-                </h2>
-              </div>
-
-              <button
-                type="button"
-                className="check-in-close"
-                onClick={closeModal}
-                aria-label="Close check-in"
-              >
-                ×
-              </button>
-            </div>
-
-            {calendarStatus.connected && googleEventsByDate[selectedDate] && (
-              <div className="card dark-theme mt-3" style={{gap: "16px"}}>
-                <h3>Google Calendar Events</h3>
-                <ul>
-                  {googleEventsByDate[selectedDate].map(ev => (
-                    <li key={ev.id}>
-                      <strong>{ev.title}</strong><br />
-                      <div>
-                        {formatEventForSelectedDay(ev.start, ev.end, selectedDate)}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <form className="check-in-form" onSubmit={handleSave}>
-              <fieldset className="check-in-fieldset">
-                <legend>Symptoms</legend>
-
-                <label className="check-in-checkbox">
-                  <input
-                    type="checkbox"
-                    name="daily_day_symp"
-                    checked={formData.daily_day_symp}
-                    onChange={updateField}
-                  />
-
-                  <span>Daytime asthma symptoms</span>
-                </label>
-
-                <label className="check-in-checkbox">
-                  <input
-                    type="checkbox"
-                    name="daily_night_symp"
-                    checked={formData.daily_night_symp}
-                    onChange={updateField}
-                  />
-
-                  <span>Nighttime asthma symptoms</span>
-                </label>
-
-                <label className="check-in-checkbox">
-                  <input
-                    type="checkbox"
-                    name="daily_limit_activity"
-                    checked={formData.daily_limit_activity}
-                    onChange={updateField}
-                  />
-
-                  <span>Symptoms limited my activity</span>
-                </label>
-              </fieldset>
-
-              <label className="check-in-input-group">
-                <span>Triggers</span>
-
-                <input
-                  type="text"
-                  name="triggers"
-                  value={formData.triggers}
-                  onChange={updateField}
-                  placeholder="Pollen, exercise, smoke"
-                />
-
-                <small>Separate multiple triggers with commas.</small>
-              </label>
-
-              <label className="check-in-input-group">
-                <span>Calendar event</span>
-
-                <input
-                  type="text"
-                  name="calendar_event"
-                  value={formData.calendar_event}
-                  onChange={updateField}
-                  placeholder="Outdoor run, work shift, travel..."
-                />
-                <small className="check-in-field-hint">
-                  Add what you have planned this day — we’ll use it in your advice.
-                </small>
-              </label>
-
-              <label className="check-in-input-group">
-                <span>Notes</span>
-
-                <textarea
-                  name="notes"
-                  value={formData.notes}
-                  onChange={updateField}
-                  rows="4"
-                  placeholder="Add anything you noticed about your symptoms."
-                />
-              </label>
-
-              {error && <p className="calendar-error">{error}</p>}
-
-              {saveMessage && (
-                <p className="calendar-success">{saveMessage}</p>
-              )}
-
-              <div className="check-in-actions">
-                <button
-                  type="button"
-                  className="check-in-cancel-button"
-                  onClick={closeModal}
-                  disabled={saving}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className="check-in-save-button"
-                  disabled={saving}
-                >
-                  {saving ? "Saving..." : "Save check-in"}
-                </button>
-              </div>
-            </form>
-          </section>
-        </div>
-      )}
+      <CalendarModal
+        selectedDate={selectedDate}
+        formData={formData}
+        error={error}
+        saveMessage={saveMessage}
+        saving={saving}
+        isFutureDate={selectedDate ? isFutureDate(selectedDate) : false}
+        googleEvents={
+          selectedDate
+            ? googleEventsByDate[selectedDate] ?? []
+            : []
+        }
+        onClose={closeModal}
+        onSave={handleSave}
+        onChange={updateField}
+        formatReadableDate={formatReadableDate}
+        formatEventForSelectedDay={formatEventForSelectedDay}
+      />
       <SpinnerOverlay visible={eventsLoading} message="Loading Google Calendar events..." />
     </main>
   );
