@@ -1,5 +1,6 @@
 import "./StatisticsPage.css";
 import { useEffect, useMemo, useState } from "react";
+import { useOutletContext } from "react-router";
 import { Button } from "react-bootstrap";
 import { useAuth } from "../../context/AuthContext";
 import { getCheckIns } from "../../helper-functions/checkIns";
@@ -7,11 +8,6 @@ import {
   loadCardPredictions,
   statisticsReminderText,
 } from "../../helper-functions/getForecast";
-
-const FALLBACK_LOCATION = {
-  lat: 43.0731,
-  lon: -89.4012,
-};
 
 const RANGE_OPTIONS = [
   { key: "day", label: "Day" },
@@ -21,30 +17,6 @@ const RANGE_OPTIONS = [
   { key: "sixMonths", label: "6 Months" },
   { key: "year", label: "Year" },
 ];
-
-function getUserLocation() {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) {
-      resolve(FALLBACK_LOCATION);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        resolve({
-          lat: coords.latitude,
-          lon: coords.longitude,
-        });
-      },
-      () => resolve(FALLBACK_LOCATION),
-      {
-        enableHighAccuracy: false,
-        timeout: 7000,
-        maximumAge: 300000,
-      }
-    );
-  });
-}
 
 function formatDateForApi(date) {
   return date.toISOString().slice(0, 10);
@@ -276,6 +248,8 @@ function StatisticsPage() {
   const [historyStatus, setHistoryStatus] = useState("loading");
   const [historyErrorMessage, setHistoryErrorMessage] = useState("");
 
+  const { location } = useOutletContext();
+
   useEffect(() => {
     let cancelled = false;
 
@@ -283,8 +257,6 @@ function StatisticsPage() {
       try {
         setForecastStatus("loading");
         setForecastErrorMessage("");
-
-        const location = await getUserLocation();
 
         const { today, tomorrow } = await loadCardPredictions({
           lat: location.lat,
@@ -318,7 +290,7 @@ function StatisticsPage() {
       }
     }
 
-    if (token) {
+    if (token && location) {
       loadForecast();
     } else {
       setForecastStatus("error");
@@ -328,7 +300,7 @@ function StatisticsPage() {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, location]);
 
   useEffect(() => {
     let cancelled = false;

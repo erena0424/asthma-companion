@@ -1,39 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { useOutletContext } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import {
   homeRiskHeading,
   loadDisplayForecast,
 } from "../../helper-functions/getForecast";
 import { logInhalerPuff } from "../../helper-functions/checkIns";
-
-const FALLBACK_LOCATION = {
-  lat: 43.0731,
-  lon: -89.4012,
-};
-
-function getUserLocation() {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) {
-      resolve(FALLBACK_LOCATION);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-        });
-      },
-      () => resolve(FALLBACK_LOCATION),
-      {
-        enableHighAccuracy: false,
-        timeout: 7000,
-        maximumAge: 300000,
-      }
-    );
-  });
-}
 
 function formatName(user) {
   return (
@@ -56,6 +28,8 @@ function HomePage() {
   const [puffMessage, setPuffMessage] = useState("");
   const [puffError, setPuffError] = useState("");
 
+  const { location, locationPermission } = useOutletContext();
+
   useEffect(() => {
     let cancelled = false;
 
@@ -63,8 +37,6 @@ function HomePage() {
       try {
         setStatus("loading");
         setErrorMessage("");
-
-        const location = await getUserLocation();
 
         const data = await loadDisplayForecast({
           lat: location.lat,
@@ -96,14 +68,14 @@ function HomePage() {
       }
     }
 
-    if (token) {
+    if (token && location) {
       loadForecast();
     }
 
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, location]);
 
   async function handleRescueInhalerClick() {
     if (!token || loggingPuff) return;
@@ -208,6 +180,11 @@ function HomePage() {
                 <hr />
 
                 <p>{nextStep}</p>
+                {
+                  locationPermission !== "granted" ?
+                    <p className="error-text-dark note">Allow location access to receive more accurate feedback based on your local environmental conditions. This will help us find potential environmental triggers near you.</p>
+                  : ""
+                }
               </article>
 
               <button

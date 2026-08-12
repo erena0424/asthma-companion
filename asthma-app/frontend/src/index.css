@@ -73,6 +73,8 @@
   --font-body-size: clamp(12px, 4vw, 20px);
   --font-body-weight: 400;
 
+  --font-small-size: clamp(8px, 3vw, 20px);
+
   /* LargeButton_Text — Abril Fatface, Regular, 36 */
   --font-large-button-family: "Abril Fatface", serif;
   --font-large-button-size: clamp(22px, 3.5vw, 36px);
@@ -1406,6 +1408,14 @@ input::-webkit-password-reveal-button {
   margin: 0;
 
   color: var(--color-error-dark)
+}
+
+.note {
+  font-size: var(--font-small-size) !important;
+  line-height: var(--font-small-size) !important;
+  margin-top: var(--font-small-size) !important;
+  
+  font-style: italic;
 }
 
 .title {
