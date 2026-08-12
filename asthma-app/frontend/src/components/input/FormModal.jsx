@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { Container, Row, Col, Button } from "react-bootstrap";
 import CancelButton from "../input/CancelButton";
 
@@ -17,7 +18,7 @@ function FormModal({
     const colorClass = color === "light" ? "cream-body" : color === "green" ? "green-body" : "dark-green-body";
     const buttonClass = color === "light" ? "button-dark" : color === "green" ? "button-dark" : "button-light";
 
-    return (
+    return createPortal(
         <div className="form-modal-overlay">
             <Container
                 className={`${colorClass} form-modal p-5 vertical-0 vertical-fill position-relative`}
@@ -60,7 +61,8 @@ function FormModal({
 
             </Container>
 
-        </div>
+        </div>,
+        document.body
     );
 }
 
