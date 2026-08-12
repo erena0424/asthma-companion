@@ -180,7 +180,7 @@
   margin: 0 1rem;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 767px) {
   .line-break-wrapper {
     flex: 0 0 100%;
     display: flex;

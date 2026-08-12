@@ -102,6 +102,7 @@ function AuthSlide({ showLogin, showSignUp }) {
     }
 
     setLoading(true);
+    setButtonError("");
 
     try {
       if (showLogin) {
