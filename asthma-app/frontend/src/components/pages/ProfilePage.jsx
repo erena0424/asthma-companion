@@ -17,6 +17,7 @@ import ProfileCircle from "../input/ProfileCircle";
 import { Card, Button } from "react-bootstrap"
 import EmergencyContactsManager from "../input/EmergencyContactsManager";
 import FormModal from "../input/FormModal";
+import CancelButton from "../input/CancelButton";
 
 function calculateAge(dateOfBirth) {
   if (!dateOfBirth) return null;
@@ -586,15 +587,14 @@ function ProfilePage() {
                     >
                       <span>{item}</span>
 
-                      <button
-                        type="button"
+                      <CancelButton
                         onClick={() =>
-                          removeListItem(item)
-                        }
-                        aria-label={`Remove ${item}`}
-                      >
-                        ×
-                      </button>
+                            removeListItem(item)
+                          }
+                        className={"button-dark"}
+                        width="20"
+                        height="20"
+                      />
                     </div>
                   ))}
                 </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "react-bootstrap";
 import { useOutletContext } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -161,7 +162,7 @@ function HomePage() {
       )}
 
       {status === "success" && forecast && (
-        <>
+        <div className="vertical-40">
           <section className="home-risk-section">
             <div className={`risk-summary risk-${riskClass}`}>
               <h2>
@@ -187,32 +188,33 @@ function HomePage() {
                 }
               </article>
 
-              <button
-                className="rescue-inhaler-button"
-                type="button"
-                onClick={handleRescueInhalerClick}
-                disabled={loggingPuff}
-              >
-                {loggingPuff
-                  ? "Logging..."
-                  : "I used my rescue inhaler."}
-              </button>
+              <div className="vertical-8 at-middle-center">
+                <Button
+                  className="button-error-dark btn-large-text"
+                  onClick={handleRescueInhalerClick}
+                  disabled={loggingPuff}
+                >
+                  {loggingPuff
+                    ? "Logging..."
+                    : "I used my rescue inhaler."}
+                </Button>
 
-              {puffMessage && (
-                <p className="inhaler-log-success">
-                  {puffMessage}
-                </p>
-              )}
+                {puffMessage && (
+                  <p className="inhaler-log-success">
+                    {puffMessage}
+                  </p>
+                )}
 
-              {puffError && (
-                <p className="inhaler-log-error">
-                  {puffError}
-                </p>
-              )}
+                {puffError && (
+                  <p className="inhaler-log-error">
+                    {puffError}
+                  </p>
+                )}
+              </div>
             </div>
           </section>
 
-          <hr />
+          <hr style={{margin: 0}}/>
 
           <ForecastCard
             title="Predicted Triggers"
@@ -229,7 +231,7 @@ function HomePage() {
               {forecast.advice.disclaimer}
             </p>
           )}
-        </>
+        </div>
       )}
     </main>
   );
@@ -242,23 +244,25 @@ function ForecastCard({ title, items }) {
 
       <hr />
 
-      <div className="forecast-tags">
-        {items.map((item, index) => (
-          <span
-            className="forecast-tag"
-            key={`${item}-${index}`}
-          >
-            {item}
-          </span>
-        ))}
-      </div>
+      <div className="vertical-16 at-middle-center">
+        <div className="forecast-tags">
+          {items.map((item, index) => (
+            <span
+              className="forecast-tag"
+              key={`${item}-${index}`}
+            >
+              {item}
+            </span>
+          ))}
+        </div>
 
-      <button
-        className="more-details-button"
-        type="button"
-      >
-        More Details
-      </button>
+        <Button
+          className="button-dark btn-large-text"
+          type="button"
+        >
+          More Details
+        </Button>
+      </div>
     </article>
   );
 }
