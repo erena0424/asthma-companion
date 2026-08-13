@@ -53,12 +53,8 @@ function LandingContent({
   return (
     <Container
       fluid
-      className="green-body vertical-16 min-vh-100 h-100 p-2"
-      style={{
-        justifyContent: "space-between"
-      }}
+      className="green-body vertical-16 min-vh-100"
     >
-
       <Row className="at-middle-center text-center">
         <Col xs="auto">
           <h1 className="title">
@@ -72,7 +68,8 @@ function LandingContent({
 
       <div
         style={{
-          flex: 1,
+          flex: "1 1 0",
+          minHeight: 0,
           position: "relative",
         }}
       >
