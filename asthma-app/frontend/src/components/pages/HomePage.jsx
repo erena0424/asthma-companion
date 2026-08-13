@@ -135,13 +135,13 @@ function HomePage() {
     "Complete yesterday’s check-in to receive a personalized recommendation.";
 
   return (
-    <main className="home-page">
+    <main>
 
       {status === "loading" && (
         <section className="home-state-card">
           <h2>Loading your forecast...</h2>
-
-          <p>
+          <br />
+          <p className="paragraph">
             We are combining your check-in and environmental data.
           </p>
         </section>
@@ -150,14 +150,16 @@ function HomePage() {
       {status === "check-in-required" && (
         <section className="home-state-card">
           <h2>Check-in required</h2>
-          <p>{errorMessage}</p>
+          <br />
+          <p className="paragraph">{errorMessage}</p>
         </section>
       )}
 
       {status === "error" && (
         <section className="home-state-card home-state-error">
           <h2>Forecast unavailable</h2>
-          <p>{errorMessage}</p>
+          <br />
+          <p className="paragraph">{errorMessage}</p>
         </section>
       )}
 

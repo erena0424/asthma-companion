@@ -534,7 +534,7 @@ function StatisticsPage() {
   }
 
   return (
-    <main className="statistics-page">
+    <main>
       <section className="statistics-grid">
         <article className="statistics-panel prediction-panel">
           <h2>

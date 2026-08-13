@@ -385,7 +385,7 @@ function ProfilePage() {
 
   if (pageStatus === "loading") {
     return (
-      <main className="profile-page profile-page-state">
+      <main className="profile-page-state">
         <h1>Profile</h1>
         <p>Loading your profile...</p>
       </main>
@@ -394,7 +394,7 @@ function ProfilePage() {
 
   if (pageStatus === "error") {
     return (
-      <main className="profile-page profile-page-state">
+      <main className="profile-page-state">
         <h1>Profile</h1>
         <p className="profile-error">{pageError}</p>
       </main>
@@ -402,7 +402,7 @@ function ProfilePage() {
   }
 
   return (
-    <main className="profile-page vertical-40">
+    <main className="vertical-40">
 
       {actionError && !activeEditor && (
         <p className="profile-global-error">

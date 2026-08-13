@@ -204,15 +204,13 @@ function CalendarPage() {
 
           notes: future
             ? null
-            : formData.notes.trim() || null,
+            : formData.notes.trim(),
 
           triggers: future
             ? null
-            : triggers.length > 0
-              ? triggers
-              : null,
+            : triggers,
 
-          calendar_event: formData.calendar_event.trim() || null,
+          calendar_event: formData.calendar_event.trim(),
         },
       });
 
@@ -256,6 +254,9 @@ function CalendarPage() {
     const checkIn = checkInsByDate[dateKey];
 
     const hasCheckIn =
+      Boolean(checkIn?.daily_day_symp) ||
+      Boolean(checkIn?.daily_night_symp) ||
+      Boolean(checkIn?.daily_limit_activity) ||
       Boolean(checkIn?.notes?.trim()) ||
       (Array.isArray(checkIn?.triggers) && checkIn.triggers.length > 0);
 
@@ -268,7 +269,7 @@ function CalendarPage() {
       <button
         type="button"
         className={[
-          "calendar-day",
+          "calendar-day vertical-8 at-middle-center",
           isToday ? "calendar-day-today" : "",
           hasCheckIn ? "calendar-day-recorded" : "",
           isFutureDate ? "calendar-day-future" : "",
@@ -283,18 +284,20 @@ function CalendarPage() {
       >
         <span className="calendar-day-number">{day}</span>
 
-        {hasCheckIn && (
-          <span
-            className="calendar-entry-dot"
-            aria-label="Check-in recorded"
-          />
-        )}
-        {hasGoogleEvent && (
-          <span
-            className="calendar-google-dot"
-            aria-label="Google Calendar event"
-          />
-        )}
+        <div className="horizontal-8 at-middle-center">
+          {hasCheckIn && (
+            <span
+              className="calendar-entry-dot"
+              aria-label="Check-in recorded"
+            />
+          )}
+          {hasGoogleEvent && (
+            <span
+              className="calendar-google-dot"
+              aria-label="Google Calendar event"
+            />
+          )}
+        </div>
       </button>
     );
   }
@@ -331,7 +334,7 @@ function CalendarPage() {
   }
 
   return (
-    <main className="calendar-page">
+    <main>
 
       <CalendarConnectionPanel />
 
