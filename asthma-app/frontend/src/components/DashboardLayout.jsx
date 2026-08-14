@@ -180,7 +180,7 @@ function DashboardLayout() {
           </div>
         </FormModal>
       )}
-      <SpinnerOverlay visible={user == null} message="Loading your information..." />
+      <SpinnerOverlay visible={user?.name === undefined} message="Loading your information..." />
     </>
   );
 }

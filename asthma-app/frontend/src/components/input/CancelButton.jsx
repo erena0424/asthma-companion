@@ -8,7 +8,14 @@ function CancelButton({ onClick, className = "", style = {}, width = "36", heigh
         onClick={onClick}
         aria-label={ariaLabel}
     >
-        <svg width={`clamp(${width*2/3}px, 5vw, ${width}px)`} height={`clamp(${height*2/3}px, 5vw, ${height}px)`} viewBox="0 0 16 16" fill="none">
+        <svg
+            style={{
+            width: `clamp(${width * 2 / 3}px, 5vw, ${width}px)`,
+            height: `clamp(${height * 2 / 3}px, 5vw, ${height}px)`,
+            }}
+            viewBox="0 0 16 16"
+            fill="none"
+        >
             <path
                 d="
                     M 8 8
