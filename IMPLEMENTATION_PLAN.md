@@ -32,7 +32,8 @@ operational check. API reference documents payloads, errors and migration setup.
 
 
 Status: narrow backend implementation complete with six isolated tests passing;
-frontend work pending. Work stays in this repository's `asthma-app/`, not a new
+checkpoint 1 frontend work implemented (verification below); character/check-in,
+help and summary controls remain pending. Work stays in this repository's `asthma-app/`, not a new
 application/backend. Active scope is the opening section of `SPEC.md` and
 `backend/SPEC.md`; historical full-mobile plans are not acceptance criteria.
 No live migration, merge, deployment or real contact action performed.
@@ -94,6 +95,30 @@ Check: create/update/clear contact round-trip; failed save remains visibly unsav
 reload after successful save; personal text round-trip; account scoping and empty
 contact state. Existing backend user tests are references, not new proof.
 
+### Checkpoint 1 implementation and verification
+
+Implemented in the copied web app:
+- Contact add/edit waits for authenticated PATCH; failures keep the modal and
+  draft available for retry. Pending controls prevent duplicate submissions;
+  deletion failures preserve the saved contact and display an error.
+- Profile applies the canonical PATCH response through AuthContext.updateUser,
+  avoiding a second GET that could obscure a successful save.
+- Care goal and accessibility needs have editors, 1000-character bounds,
+  saved/error status and empty-string clearing under their original meanings.
+- Shared FormModal gained an optional pending prop. Other consumers retain default
+  behavior; onboarding contact drafts do not claim server persistence. No backend,
+  schema or authentication changes were needed.
+
+Checks: five mounted React/jsdom tests with mocked fetch cover edit pending/failure/
+retry, deletion failure/clear, add, personal text correction/clearing and profile
+GET after remount; 17 existing forecast helper tests passed. Production build
+passed with output in /tmp and the existing bundle-size warning. Reproducible
+commands: asthma-app/docs/BUILDFEST_BACKEND_SETUP.md.
+These do not prove live database persistence, user isolation, real-browser
+focus/keyboard/viewport behavior or successful reload against a running API.
+Rehearse save/reload with a fictitious account before the live demo. Backend
+isolation tests belong to the merged backend checkpoint, not this frontend change.
+
 ## Checkpoint 2 — Character-guided reflection without forecast dependency
 
 **Owner:** frontend-dev plus bounded backend-dev change.
@@ -148,12 +173,11 @@ review it separately; do not improvise advice to fill a missing clinician plan.
 
 ## Validation and execution limits
 
-Current inspection was read-only before these documentation edits. Attempted
-`node --test src/helper-functions/forecastDisplayLogic.test.js` in frontend:
-failed because `node` is not available in this execution environment. This test
-is legacy forecast-display coverage, not help/contact evidence even if it passes.
-No app/browser/server/DB/provider was started, and no integration behavior is
-certified. Runtime setup is the first implementation check, not assumed complete.
+The original documentation inspection did not run the app. Checkpoint 1 now has
+focused mocked UI checks and a build as listed above, using installed Node 24;
+the earlier node-unavailable observation no longer describes this environment.
+No live API, database or provider was started. End-to-end persistence and
+real-browser behavior remain unverified.
 
 Root package scripts delegate frontend to `asthma-app/frontend`. Build writes
 tracked `frontend/docs`; inspect output changes before accepting a build.
