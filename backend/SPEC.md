@@ -30,30 +30,66 @@ Avoid unnecessary:
 
 # 2. Relationship to Existing Lobelia
 
-This BuildFest application is a NEW and independent prototype.
+This BuildFest application is a new prototype and product direction built on
+prior Lobelia work.
 
-The existing Lobelia workspace may be inspected for:
+BuildFest rules permit reuse of existing code where appropriate.
 
-- asthma/medical research
-- CDC/NHLBI/GINA sources
-- environmental-data integrations
-- weather/AQI/pollen implementation
-- useful prompts
-- relevant asthma/context logic
-- implementation patterns that can save time
+The existing Lobelia codebase SHOULD be inspected before implementing backend
+functionality from scratch.
 
-Reuse KNOWLEDGE aggressively.
+Reuse or adapt existing code when it is:
+- already working
+- understood
+- relevant to the BuildFest requirements
+- faster to adapt than rebuild
+- unlikely to introduce unnecessary complexity
 
-Reuse CODE only when doing so is clearly faster and simpler than rebuilding it.
+Potentially reusable areas include:
 
-Do NOT:
-- modify the original Lobelia application
-- make the BuildFest application depend on the original application
-- reproduce Lobelia's full architecture
-- bring over complex RAG/LangGraph/provider abstractions unless genuinely needed
+- FastAPI application setup
+- database configuration and models
+- Neon/PostgreSQL integration
+- environmental API integrations
+- weather retrieval
+- AQI retrieval
+- pollen retrieval
+- LLM provider integration
+- structured LLM output patterns
+- profile/context handling
+- existing asthma knowledge and medical sources
+- prompts or guardrails that remain relevant
+- utility functions
+- testing infrastructure
 
-When medical or environmental assumptions are needed, prefer existing
-validated Lobelia research over inventing new rules.
+Do NOT rebuild functionality merely for the sake of making the BuildFest
+codebase independent.
+
+However, reuse should be selective.
+
+Do NOT automatically carry over:
+- architecture that is unnecessary for this prototype
+- complex RAG pipelines
+- LangGraph/multi-agent workflows
+- provider fallback systems
+- vector databases
+- authentication complexity
+- ML risk-prediction infrastructure
+- other dependencies that do not support the BuildFest demo
+
+If an existing Lobelia component is useful but unnecessarily complex, prefer
+extracting or simplifying the relevant portion.
+
+The goal is:
+
+REUSE WORKING FOUNDATIONS
++
+BUILD NEW BUILDfest EXPERIENCES
++
+REMOVE UNNECESSARY COMPLEXITY
+
+Do not modify the original Lobelia implementation destructively. Preserve the
+existing project while adapting/reusing code for the BuildFest application.
 
 ---
 
@@ -776,12 +812,38 @@ frontend implementation.
 
 Recommended order:
 
-## Phase 1 — Foundation
-- inspect existing Lobelia resources
-- choose minimal backend stack
+## Phase 0 — Reuse Audit
+
+Before writing substantial new backend code:
+
+1. Inspect the existing Lobelia backend.
+2. Identify reusable components for:
+   - FastAPI/server setup
+   - database/persistence
+   - environmental providers
+   - LLM integration
+   - profile/context handling
+   - medical knowledge
+3. Classify each relevant component as:
+   - REUSE AS-IS
+   - ADAPT
+   - REBUILD SIMPLY
+   - NOT NEEDED
+4. Prefer reuse/adaptation when it saves meaningful implementation time.
+5. Do not refactor the original Lobelia project unnecessarily.
+
+Produce a short reuse plan before beginning substantial implementation.
+
+## Phase 1 — BuildFest Foundation
+
+Using the reuse plan:
+
+- establish the BuildFest backend
+- reuse/adapt existing infrastructure where beneficial
+- remove unnecessary dependencies
 - establish persistence
-- create basic models
-- seed demo user
+- seed demo data
+- verify the backend runs independently enough for reliable development
 
 ## Phase 2 — Core Data
 - Profile
@@ -826,12 +888,19 @@ When using Codex or another coding agent:
 
 1. Read `SPEC.md` and this file before substantial implementation.
 2. Inspect existing code before editing.
-3. Work only in the BuildFest backend unless explicitly instructed otherwise.
-4. Do not modify the original Lobelia application.
-5. Prefer the simplest implementation satisfying current requirements.
-6. Do not introduce architecture for hypothetical future requirements.
-7. Run relevant tests/type checks after meaningful changes.
-8. Fix discovered errors before declaring a task complete.
+3. Existing Lobelia code may be inspected, copied, reused, or adapted when
+   BuildFest rules permit and doing so saves development time.
+4. Before implementing a substantial capability from scratch, check whether
+   Lobelia already contains a working implementation.
+5. Do not destructively modify existing Lobelia functionality unless
+   explicitly instructed.
+6. Prefer:
+   reuse > small adaptation > simple new implementation
+   when reuse actually reduces complexity.
+7. Do NOT reuse code merely because it exists. Avoid importing unnecessary
+   architecture or dependencies into the BuildFest prototype.
+8. Clearly distinguish reused/adapted code from newly implemented BuildFest
+   functionality when documenting the project.
 9. Do not modify frontend code unless explicitly asked.
 10. Flag medical uncertainty rather than inventing behavior.
 11. Preserve working functionality while adding features.

@@ -913,6 +913,25 @@ Use AI coding tools heavily for implementation, but humans own:
 
 Do not allow coding agents to add unnecessary abstractions or infrastructure.
 
+## Existing Code and Prior Work
+
+This project builds on ideas and technical work from the previous Lobelia
+project.
+
+BuildFest rules permit reuse of existing code where appropriate. The team may
+reuse or adapt existing Lobelia components, infrastructure, integrations, and
+implementation patterns when doing so accelerates development.
+
+However, the BuildFest project should demonstrate substantial new work and a
+distinct product direction, including the mobile companion experience,
+calendar/event-aware support, proactive interactions, mental/emotional
+support, and structured breathing-help flow.
+
+When reusing existing code:
+- understand what is being reused
+- adapt it intentionally to the new product
+- avoid carrying over unnecessary complexity
+- prioritize new BuildFest functionality and demo quality
 ---
 
 # 25. Demo Reliability
