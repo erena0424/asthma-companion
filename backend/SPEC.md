@@ -1,3 +1,113 @@
+# Backend adaptation for the current web demo
+
+## Authorized continuity extension (current implementation contract)
+
+This extension supersedes earlier no-schema and future-memory exclusions below.
+Reuse explicit profile `care_goal` and `accessibility_needs` edits as support
+preferences; no inferred preferences. Add only nullable `users.support_memory`
+JSONB for ONE latest optional short user-approved check-in summary (text up to
+500 characters, optional user-reported check-in date, server UTC saved_at, source user-reported).
+No raw chat saving, automatic extraction, clinical inference, vector or provider
+integration. This is user-authored text, never a verified clinical conclusion.
+
+Authenticated GET `/v1/users/me/support-memory` returns `{summary: object|null}`.
+PUT on that path requires `text` and explicit boolean `approved: true`;
+`check_in_date` is optional user-reported date metadata, never ownership proof.
+Reject extra fields. Saving a summary never creates or changes a daily check-in.
+PATCH contact writes require nonblank names (max 100 each) and phone max 40
+with 7–15 digits/ordinary punctuation; reject unknown contact fields. Legacy
+reads remain tolerant. Personal text PATCH fields max 1000; empty string clears. PUT replaces the prior summary and
+updates timestamp; DELETE clears durably and returns 204. No client user ID.
+Summary is independent reviewed text: editing source check-in does not regenerate
+it; view/correct/delete use these endpoints. No background copies or regeneration.
+Profile contacts array clears legacy contact text when emptied. Existing daily
+POST gains `refresh_forecast=false` opt-out, default true unchanged. New flow
+uses false and sends no raw reflection notes unless deliberately saved as the
+existing daily note. Summary approval is a separate explicit action after review; daily save is not required.
+
+Migration adds one nullable column in the existing Postgres database. Tests use
+isolated SQLite with test-only type compilation and fresh sessions, never legacy
+fixtures or configured databases; Postgres migration runtime remains a separate
+operational check. API reference documents payloads, errors and migration setup.
+
+
+## Active contract
+
+Use the existing `asthma-app/api`, `services`, `db` and React client in this repo.
+`backend/` currently contains this document, not a new running server. No new
+backend, database platform or auth system is required; the sole schema addition
+is one nullable continuity column for the smallest
+contact → guided reflection → help-access story. Preserve existing routes and
+the historical proposal below; this section takes precedence for tomorrow.
+
+## What source inspection established
+
+| Existing component | Reuse decision and constraint |
+|---|---|
+| `asthma-app/api/main.py:105` router registration; `db/database.py:21` sessions | REUSE existing server/session infrastructure; runtime/DB connection not verified. Do not point tests at an unknown database. |
+| `db/models.py:47`, `api/users.py:86`, `api/users.py:91` | REUSE contact JSONB and authenticated GET/PATCH `/v1/users/me`. Canonical `emergency_contacts` array holds id/name/phone/email; frontend label may say trusted contact without schema rename. |
+| `api/user_schemas.py:11`, `api/users.py:65` | ADAPT only if validation or clearing requires it. Existing fields are optional and null writes are ignored; do not promise validation absent code/tests. Clearing array must not surface stale legacy `emergency_contact` text. |
+| `db/models.py:51`, `api/users.py:56` | REUSE user-entered `care_goal` and `accessibility_needs` as personal information with their existing meanings. Not clinician instructions or a medical plan. |
+| `api/check_ins.py:29`, `services/check_in_service.py:71` | ADAPT existing daily boolean reflection/notes save. One row per user/date, not a new severity or mood model. Service commits before forecast refresh. |
+| `api/check_ins.py:81`, `services/forecast_service.py:424` | ADAPT narrow opt-out for new companion requests so save does not wait on forecast work. Preserve legacy callers/defaults; no global forecast rewrite. |
+| Existing forecasts/chat/episodes/providers | NOT NEEDED for this path. Preserve functionality elsewhere, but new help/check-in does not depend on them. |
+| Saved clinician Action Plan, contact dispatch/delivery tracking | NOT FOUND as a ready backend capability; do not invent availability or build for tomorrow. |
+
+Evidence is source-wiring, not a passing integration test. Existing
+`tests/test_users_api.py:72` exercises contact round-trip intentions;
+`tests/test_check_ins_api.py` covers old check-in behavior. Neither was run here.
+
+## Minimal contracts and proposed changes
+
+- Keep `GET/PATCH /v1/users/me` and authenticated user scoping. Save trusted
+  contacts through the existing array, refresh from the returned server value,
+  and load canonical array on help page. An empty list is empty, not stale legacy
+  fallback. Display phone for manual use; no backend contact/send action.
+- Load saved `care_goal` and `accessibility_needs` alongside contacts. Add simple
+  editors for those already-supported fields only if absent in the current UI;
+  empty strings can clear them under existing PATCH behavior. Do not overload
+  them with generated clinical content or store a fabricated Action Plan.
+- Keep check-in daily semantics and existing boolean fields/optional notes.
+  Questions must actually collect each submitted boolean; unanswered must not
+  silently mean false. Optional free text can capture feelings in `notes` without
+  pretending to be a separate structured mood history. Do not interpret or display
+  `is_flare_up`, burden score or forecast as an assessment in this path; existing
+  response fields may remain for compatibility.
+- Proposed small additive change: `POST /v1/check-ins?refresh_forecast=false`
+  skips optional forecast refresh for companion flow; default remains true for
+  existing callers. Existing persisted payload stays compatible. Frontend helper
+  passes the option explicitly. No classifier/LLM added. The opt-out needs no migration; continuity uses the
+  single-column migration above.
+- A failed DB write stays an error. Help must not wait for save completion or an
+  LLM; user can navigate there immediately. Do not claim offline persistence.
+
+## Verification and operational limits
+
+Implementation must verify contact save/load/clear, failed-save honesty, cross-user
+access protection, preserved personal text and reflection saved with forecast
+refresh disabled. Assert disabled requests never invoke forecast/LLM; old default
+behavior remains covered. Check-in response compatibility does not establish
+clinical safety. Source tests currently require dedicated Postgres/pgvector for
+the legacy schema; never run destructive fixtures against a real account DB.
+
+Root `package.json` delegates frontend to `asthma-app/frontend`; its deploy/done
+scripts publish/push and must not be used as validation. `scripts/backend.py`
+currently assumes Windows `.venv/Scripts/python.exe`; do not assume it runs on
+this machine. Select an existing suitable interpreter/dev command during build
+without rewriting environment setup unless required. Node was unavailable for
+this audit's attempted pure test. No server, credentials or external services
+were exercised. Merge/deploy and actual contact actions are outside this update.
+
+---
+
+# Historical backend proposal — not tomorrow's build contract
+
+Preserved original planning below. Its new-backend architecture, wider entities
+and LLM/context scope do not override the narrow adaptation above.
+
+<details>
+<summary>Original broader proposal (historical, not active scope)</summary>
+
 # Asthma Companion — BuildFest Backend Spec
 
 ## 1. Backend Goal
@@ -935,3 +1045,5 @@ CONVERSATION ──────────┘
 
 Safety-critical asthma classification remains deterministic and outside the
 LLM.
+
+</details>

@@ -20,3 +20,13 @@ async def api_error_handler(_request: Request, exc: APIError) -> JSONResponse:
         status_code=exc.status_code,
         content={"detail": exc.detail, "code": exc.code},
     )
+
+
+async def validation_exception_handler(_request, exc):
+    """Keep validation failures JSON-safe, including custom validator errors."""
+    from fastapi.encoders import jsonable_encoder
+    return JSONResponse(
+        status_code=400,
+        content={"detail": "Validation error", "code": "VALIDATION_ERROR",
+                 "errors": jsonable_encoder(exc.errors(), custom_encoder={ValueError: str})},
+    )

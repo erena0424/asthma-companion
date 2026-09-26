@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 from api.advice import router as advice_router
 from api.auth import router as auth_router
@@ -16,7 +15,7 @@ from api.calendar import router as calendar_router
 from api.chat import router as chat_router
 from api.check_ins import router as check_ins_router
 from api.env import EnvDailyResponse, get_env_daily
-from api.errors import APIError, api_error_handler
+from api.errors import APIError, api_error_handler, validation_exception_handler
 from api.forecast import router as forecast_router
 from api.interpreter import interpret_risk
 from api.predict import PatientInput, health_status, run_classifier_prediction, run_prediction
@@ -77,12 +76,7 @@ app.add_middleware(
 app.add_exception_handler(APIError, api_error_handler)
 
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(_request, exc: RequestValidationError):
-    return JSONResponse(
-        status_code=400,
-        content={"detail": "Validation error", "code": "VALIDATION_ERROR", "errors": exc.errors()},
-    )
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 
 @app.get("/health")

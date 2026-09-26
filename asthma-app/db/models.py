@@ -45,6 +45,7 @@ class User(Base):
     date_of_birth: Mapped[Optional[date]] = mapped_column(Date)
     emergency_contact: Mapped[Optional[str]] = mapped_column(Text)
     emergency_contacts: Mapped[Optional[list]] = mapped_column(JSONB, default=list)
+    support_memory: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     preferred_reminder: Mapped[Optional[str]] = mapped_column(String(16))
     contact_method: Mapped[Optional[str]] = mapped_column(String(32))
     preferred_environment: Mapped[Optional[str]] = mapped_column(String(64))

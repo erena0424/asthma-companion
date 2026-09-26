@@ -67,6 +67,7 @@ async def create_check_in(
     body: CheckInCreate,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    refresh_forecast: bool = Query(True),
 ) -> dict:
     day = body.date or Date.today()
     check_in = upsert_check_in(
@@ -80,12 +81,11 @@ async def create_check_in(
         triggers=body.triggers,
         calendar_event=body.calendar_event,
     )
-    forecast = await refresh_forecast_after_check_in(
-        db,
-        user,
-        day=day,
-        calendar_changed=body.calendar_event is not None,
-    )
+    forecast = None
+    if refresh_forecast:
+        forecast = await refresh_forecast_after_check_in(
+            db, user, day=day, calendar_changed=body.calendar_event is not None,
+        )
     return _with_forecast_refresh(check_in_to_dict(check_in), forecast)
 
 

@@ -726,3 +726,62 @@ LLM provider outages on `/v1/forecast`, `/v1/advice`, and `/v1/chat` do not use 
 - [ENV_API_DESIGN.md](./ENV_API_DESIGN.md) — environment column definitions and providers
 - [CALENDAR.md](./CALENDAR.md) — Google Calendar OAuth setup
 - [README.md](../README.md) — local setup, Docker, tests
+
+## BuildFest confirmed support context
+
+All routes below require `Authorization: Bearer <access_token>` from existing
+login. Ownership always comes from the authenticated subject. Missing, invalid
+or expired JWT: 401 `UNAUTHORIZED`; deleted-account token: 404 `USER_NOT_FOUND`.
+Validation: 400 `{detail:"Validation error",code:"VALIDATION_ERROR",errors:[...]}`.
+Persistence failures remain server errors; clients must not mark failed saves as saved.
+
+### Existing profile: GET/PATCH `/v1/users/me`
+
+PATCH example:
+```json
+{"emergency_contacts":[{"id":"demo-contact","firstName":"Demo","lastName":"Contact","phone":"+1 555 010 0123","email":null}],"care_goal":"Make time for breaks","accessibility_needs":"Larger text"}
+```
+Returns full existing profile, including canonical contact array, legacy contact
+string, care_goal and accessibility_needs. Fields retain their existing meanings;
+they are user-entered support information, not a clinical plan or inferred style.
+Omitted fields remain unchanged, null retains legacy no-op behavior. Empty strings
+clear personal text. `emergency_contacts: []` clears both array and legacy string.
+PATCH contacts now require a nonblank first/last name (each max 100), phone max 40
+with 7–15 digits and ordinary `+ ()-.` punctuation; id max 128, email max 254.
+Unknown contact properties are rejected. This validates shape, not reachability.
+Historical email-only records still load; writing email-only contacts is rejected.
+Support text PATCH values are capped at 1000. Summary cannot be written through
+profile PATCH or registration. No contact messages/calls are sent by the backend.
+
+### Latest approved summary: `/v1/users/me/support-memory`
+
+GET returns `{"summary":null}` until explicitly saved. PUT creates or replaces
+ONE latest summary; correction requires renewed explicit approval:
+```json
+{"text":"I prefer a short pause before reflecting.","approved":true,"check_in_date":"2026-09-26"}
+```
+Only literal boolean true qualifies; missing/false/1/strings fail validation.
+`text` is trimmed, nonblank and max 500 characters. `check_in_date` is optional
+ISO date (default null), user-reported metadata, not a foreign key; no daily
+check-in is required or created. Extra fields (including user_id) are rejected.
+200 response (GET uses the same shape):
+```json
+{"summary":{"text":"I prefer a short pause before reflecting.","check_in_date":"2026-09-26","saved_at":"2026-09-26T15:00:00+00:00","source":"user-reported"}}
+```
+Timestamp is server-generated UTC on each approval. Source means user report,
+not independently verified medical information. Editing check-ins never refreshes
+this reviewed snapshot. DELETE returns 204 with no body, including if already
+empty; subsequent GET returns null. No automatic extraction, chat logging,
+embeddings, LLM calls or copies into profile/episode history are performed.
+Deletion clears this application field, not external database backups.
+
+### Daily reflection: POST `/v1/check-ins?refresh_forecast=false`
+
+```json
+{"date":"2026-09-26","daily_day_symp":false,"daily_night_symp":false,"daily_limit_activity":false}
+```
+Returns 201 with existing check-in fields plus `forecast_refreshed:false`.
+Same-day writes update one existing row. Send each boolean only after answering.
+Optional existing notes are persisted if explicitly provided; never send raw chat.
+This POST does not save a support summary. With flag omitted, legacy forecast
+refresh remains enabled. This flow displays no legacy risk/burden assessment.

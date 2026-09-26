@@ -1,3 +1,130 @@
+# Lobelia Asthma Companion — Tomorrow's Web Demo
+
+## Current scope and precedence
+
+This section is the active product direction. Adapt the existing React web app
+and FastAPI backend in `asthma-app/`; do not start a replacement application or
+assume a new backend is necessary. The earlier mobile/full-companion proposal
+is preserved verbatim below as historical context, not tomorrow's acceptance
+criteria. See `IMPLEMENTATION_PLAN.md` and `backend/SPEC.md` for the small build.
+The backend portion is being implemented separately from the planned character
+and help-screen frontend. Completion and verification are recorded in
+`IMPLEMENTATION_PLAN.md`; page descriptions are not claims of a live UI.
+
+## Who it helps and why
+
+Target: adults living with asthma who want approachable everyday reflection and
+quick access to a trusted person's details and their own support information.
+Problem hypothesis: those details can be scattered or inconvenient to locate
+when someone wants support. Intended benefit: fewer steps to find them and a
+friendlier check-in. No improvement in health outcomes has been established.
+
+Business hypothesis, unvalidated: a consumer-first companion may eventually
+support optional paid personalization while basic access to saved support stays
+free. First validate usefulness, repeat use, trust and willingness to pay; no
+pricing or clinic demand is established. Clinic sponsorship is a later hypothesis.
+No sales, outreach or monetization infrastructure belongs in tomorrow's demo.
+
+## One small demonstration
+
+1. In the existing profile experience, save a trusted contact's name and phone.
+   Show a real successful save, then reload and retrieve that same contact.
+2. Peyton's supplied character guides a short voluntary check-in. Use existing
+   daily reflection fields and optional notes, without scoring/classification.
+   Confirm saving only after the existing API acknowledges success.
+3. Open an always-visible “I need help” entry in the companion area. Immediately
+   show saved trusted contacts and the user's own care goal/accessibility needs
+   as personal support information, with clear empty/error states.
+4. A user-selected contact action opens the device's phone handler when supported;
+   also display the number for manual use. This does not prove a call connected,
+   a contact was notified or anyone responded. No automated message is sent.
+
+The check-in must not gate the help screen. Help retrieval must not wait for
+LLM, weather, forecast or character animation. No contact data is sent to an LLM.
+On failed save show unsaved/retry status; never pretend data persisted. On failed
+load distinguish unavailable from no saved contact. If a same-account in-session
+last-loaded value is shown, label it as such; do not claim tested offline access.
+
+## P0, later and boundaries
+
+P0: reuse contact save/retrieval; supplied character and accessible text-guided
+reflection; a simple help page with saved personal information; visible loading,
+empty, failure and saved states; narrow integration verification on target device.
+Keep existing auth/routing/layout and other working features intact. Hide legacy
+forecast/risk content from this new companion/help path rather than presenting
+it as acute assessment. Existing routes are not evidence of new capabilities.
+
+Later: richer animation, mood model/history, automatic conversation memory, environment,
+calendar enhancements or clinician-plan storage. Do not build these to complete
+tomorrow's story. No emergency-zone questionnaire or clinical classification is
+required by this revised demo.
+
+This companion does not detect attacks, monitor the user continuously, dispatch
+help or guarantee delivered alerts. Do not imply those capabilities. It provides
+user-requested access to saved information and supportive reflection. It must not
+generate medication/dose instructions or treatment plans. Any future displayed
+clinician plan must be supplied by the user/clinician and preserved verbatim;
+no such dedicated plan model was found in the inspected source.
+
+## Limited continuity for the demo
+
+Reuse the authenticated profile for user-confirmed care goals, accessibility
+needs and trusted contacts, keeping those fields under their existing meanings.
+Add one optional short user-approved check-in summary per user, labeled
+`user-reported` with its observation date and server save timestamp. The user
+can view it, explicitly approve a correction/replacement, or delete it. A later
+session may retrieve this background context; current corrections take priority.
+Saving the summary is a separate explicit action, never a side effect of chat
+or a check-in. No full conversation is retained and no diagnosis, medication,
+trigger or treatment instruction is inferred. The summary is not an instruction
+to the character or verified medical guidance. No vector or memory service is
+needed. Saving or deleting this summary does not create or erase an independent
+legacy check-in record; the frontend must distinguish those actions.
+
+Demonstrate two authenticated sessions: save user-confirmed support information
+and an approved summary in the first, retrieve the same context in the second,
+then correct/delete and verify the old summary is no longer returned. Also
+verify a second user cannot retrieve or mutate it. Character rendering and the
+optional-save/view/correct/delete controls remain frontend integration work.
+
+## Character, assets and credit
+
+Use the character supplied or identified by Peyton; confirm its creator and
+attribution rather than assuming authorship. Do not use a generated replacement
+or an existing logo relabeled as that character.
+The inspected repo contains lung/flower and Lobelia logo assets, but no asset
+identified as Peyton's character. Obtain the asset/path and attribution wording
+before declaring character integration complete. Layout/wiring can proceed with
+an explicitly temporary placeholder; remove it for the completed character demo.
+Preserve existing asset credits, font licenses and the root MIT LICENSE
+(Copyright 2026 ychang326); do not infer authorship of uncredited images.
+
+## Evidence and acceptance
+
+Static source inspection verified contact/profile and check-in request wiring;
+it did not establish live server/database, current browser behavior or working
+phone handoff. No help route or Peyton character integration was found. A safe
+existing pure frontend test was attempted, but `node` was unavailable in this
+execution environment; no tests passed or live behavior is claimed here.
+
+Acceptance: save/reload contact, preserve own support information, complete and
+save a non-diagnostic reflection, reach help directly, render correct saved
+contact with user-initiated device handoff and honest unsupported-device behavior.
+Test absent contact, failed save/load, keyboard navigation, narrow viewport and
+no LLM/forecast call dependency in this path. Do not contact a real person during
+QA; use fictitious records and stop before initiating a real call.
+
+---
+
+# Historical proposal — superseded for tomorrow's demo
+
+The following original specification is preserved for provenance and possible
+future exploration. Its mobile architecture, clinical classification, memory,
+calendar and generated guidance scope are not current implementation instructions.
+
+<details>
+<summary>Original broader proposal (historical, not active scope)</summary>
+
 # Asthma Companion — BuildFest Product Spec
 
 ## 1. Product Overview
@@ -988,3 +1115,5 @@ It is:
 
 When scope decisions are necessary, prioritize features that best demonstrate
 this idea.
+
+</details>
