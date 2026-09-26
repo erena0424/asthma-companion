@@ -1,0 +1,103 @@
+# Free local stack: Postgres + API (Docker Engine / Colima / Docker Desktop Personal).
+# Usage: ./run_docker.sh up
+
+services:
+  postgres:
+    # pgvector required for episode hybrid memory (semantic retrieval)
+    image: pgvector/pgvector:pg16
+    container_name: mirror-lake-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mirror_lake
+    volumes:
+      - mirror_lake_pgdata:/var/lib/postgresql/data
+      #- ./docker/init-databases.sql:/docker-entrypoint-initdb.d/01-init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mirror_lake"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mirror-lake-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/mirror_lake
+      DATABASE_URL_DIRECT: postgresql://postgres:postgres@postgres:5432/mirror_lake
+      JWT_SECRET: ${JWT_SECRET:-dev_local_docker_jwt_secret_not_for_production}
+      ENV_PROVIDER: ${ENV_PROVIDER:-openmeteo}
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:8000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Optional dev service with hot reload — enable with: docker compose --profile dev up api-dev
+  api-dev:
+    profiles: ["dev"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mirror-lake-api-dev
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/mirror_lake
+      DATABASE_URL_DIRECT: postgresql://postgres:postgres@postgres:5432/mirror_lake
+      JWT_SECRET: ${JWT_SECRET:-dev_local_docker_jwt_secret_not_for_production}
+      ENV_PROVIDER: ${ENV_PROVIDER:-openmeteo}
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:8000}
+    volumes:
+      - .:/app
+    command:
+      [
+        "uvicorn",
+        "api.main:app",
+        "--reload",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--app-dir",
+        "/app",
+      ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Run tests in Docker — enable with: docker compose --profile test run --rm test
+  # Uses create_all in pytest fixtures (not Alembic) against mirror_lake_test.
+  test:
+    profiles: ["test"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/mirror_lake_test
+      JWT_SECRET: test-secret-for-docker-pytest
+      ENV_PROVIDER: openmeteo
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["sh", "-c", "python scripts/wait_for_db.py && exec \"$@\"", "--"]
+    command: ["pytest", "tests/", "-q", "-m", "not live"]
+
+volumes:
+  mirror_lake_pgdata:

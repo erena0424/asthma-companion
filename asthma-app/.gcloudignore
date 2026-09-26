@@ -1,0 +1,51 @@
+# Cloud Build upload ignore — keep the source tarball small.
+# (Cloud Build does not use .dockerignore for the upload step.)
+
+.git
+.gcloudignore
+.gitignore
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+LLM/.env
+
+# Python / tooling
+.venv
+venv
+__pycache__/
+*.py[cod]
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.ipynb_checkpoints
+*.egg-info/
+
+# Frontend (API image does not need it)
+frontend/
+node_modules/
+
+# Notebooks and docs not required to run the API
+notebooks/
+*.ipynb
+docs/
+*.md
+!README.md
+
+# Large / local-only data
+data/
+model/data/
+saved_models/
+*.csv
+*.parquet
+
+# Tests (optional for image build; speeds upload)
+tests/
+.coverage
+htmlcov/
+
+# Docker / local ops
+docker-compose*.yml
+run_*.sh
+check_llm_advice.sh

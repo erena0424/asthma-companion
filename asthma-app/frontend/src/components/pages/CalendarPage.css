@@ -1,0 +1,420 @@
+.calendar-page {
+  min-height: 100%;
+  padding: 22px 28px 44px;
+}
+
+.calendar-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px 18px;
+  border-bottom: 3px solid #194743;
+}
+
+.calendar-page-header h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(3rem, 6vw, 5rem);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.calendar-header-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: #d6d6d6;
+}
+
+.calendar-card {
+  width: min(820px, 100%);
+  margin: 22px auto 0;
+  padding: 30px 38px 38px;
+  border-radius: 32px;
+  background: #d4e4ad;
+}
+
+.calendar-month-controls {
+  display: grid;
+  grid-template-columns: 52px 1fr 52px;
+  align-items: center;
+  margin-bottom: 26px;
+}
+
+.calendar-month-controls h2 {
+  margin: 0;
+  text-align: center;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+}
+
+.calendar-arrow {
+  border: 0;
+  background: transparent;
+  color: #194743;
+  font-size: 2.1rem;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.calendar-arrow:hover {
+  background: rgba(25, 71, 67, 0.1);
+}
+
+.calendar-grid-wrapper {
+  overflow: hidden;
+  border: 3px solid #194743;
+  border-radius: 26px;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-bottom: 3px solid #194743;
+}
+
+.calendar-weekday {
+  padding: 19px 4px;
+  text-align: center;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(0.9rem, 2vw, 1.3rem);
+  font-weight: 700;
+}
+
+.calendar-weekday:not(:last-child) {
+  border-right: 2px solid #194743;
+}
+
+.calendar-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-rows: minmax(82px, 1fr);
+  padding: 18px 14px;
+}
+
+.calendar-day,
+.calendar-empty-cell {
+  min-width: 0;
+  min-height: 82px;
+}
+
+.calendar-day {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  border: 0;
+  border-radius: 18px;
+  padding: 14px 5px;
+  background: transparent;
+  color: #101a16;
+  font: inherit;
+  cursor: pointer;
+}
+
+.calendar-day:hover {
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.calendar-day:focus-visible {
+  outline: 3px solid #194743;
+  outline-offset: -3px;
+}
+
+.calendar-day-number {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.calendar-day-today .calendar-day-number {
+  border: 2px solid #194743;
+}
+
+.calendar-day-recorded .calendar-day-number {
+  background: #194743;
+  color: #fbf8ef;
+}
+
+.calendar-entry-dot {
+  position: absolute;
+  bottom: 12px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #194743;
+}
+
+.calendar-google-dot {
+  position: absolute;
+  bottom: 12px;
+  right: 12px; /* or left: 12px */
+  width: 7px;
+  height: 7px;
+  background-color: #4285F4;
+  border-radius: 50%;
+}
+
+.calendar-day-recorded .calendar-entry-dot {
+  background: #fbf8ef;
+}
+
+.calendar-status,
+.calendar-error,
+.calendar-success {
+  text-align: center;
+}
+
+.calendar-error {
+  color: #a23838;
+}
+
+.calendar-success {
+  color: #215f46;
+}
+
+.check-in-modal-overlay {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(10, 28, 26, 0.36);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.check-in-modal {
+  width: min(590px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border: 2px solid #194743;
+  border-radius: 28px;
+  padding: 28px;
+  background: #fbf8ef;
+  box-shadow: 0 22px 60px rgba(8, 28, 25, 0.25);
+}
+
+.check-in-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #194743;
+}
+
+.check-in-modal-header h2 {
+  margin: 4px 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+}
+
+.check-in-modal-label {
+  margin: 0;
+  color: #57716b;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.check-in-close {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #194743;
+  border-radius: 50%;
+  background: transparent;
+  color: #194743;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.check-in-form {
+  display: grid;
+  gap: 22px;
+  padding-top: 24px;
+}
+
+.check-in-fieldset {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.check-in-fieldset legend,
+.check-in-input-group > span {
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.check-in-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  border: 1px solid rgba(25, 71, 67, 0.45);
+  border-radius: 14px;
+  background: #eef3db;
+  cursor: pointer;
+}
+
+.check-in-checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: #194743;
+}
+
+.check-in-input-group {
+  display: grid;
+}
+
+.check-in-input-group input,
+.check-in-input-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(25, 71, 67, 0.55);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #fffdf7;
+  color: #153f3c;
+  font: inherit;
+}
+
+.check-in-input-group textarea {
+  resize: vertical;
+}
+
+.check-in-input-group input:focus,
+.check-in-input-group textarea:focus {
+  outline: 3px solid rgba(25, 71, 67, 0.2);
+  border-color: #194743;
+}
+
+.check-in-input-group small {
+  margin-top: 6px;
+  color: #64746f;
+}
+
+.check-in-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.check-in-cancel-button,
+.check-in-save-button {
+  border-radius: 999px;
+  padding: 12px 20px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.check-in-cancel-button {
+  border: 1px solid #194743;
+  background: transparent;
+  color: #194743;
+}
+
+.check-in-save-button {
+  border: 1px solid #194743;
+  background: #194743;
+  color: #fbf8ef;
+}
+
+.check-in-cancel-button:disabled,
+.check-in-save-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (max-width: 700px) {
+  .calendar-page {
+    padding: 18px 14px 32px;
+  }
+
+  .calendar-page-header h1 {
+    font-size: 3rem;
+  }
+
+  .calendar-header-avatar {
+    width: 56px;
+    height: 56px;
+  }
+
+  .calendar-card {
+    margin-top: 28px;
+    padding: 24px 12px;
+    border-radius: 24px;
+  }
+
+  .calendar-connection-panel {
+    margin-top: 18px;
+    padding: 18px 16px;
+    border-radius: 22px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .calendar-connection-actions {
+    justify-content: stretch;
+  }
+
+  .calendar-connection-button {
+    width: 100%;
+  }
+
+  .calendar-days-grid {
+    grid-auto-rows: 64px;
+    padding: 10px 5px;
+  }
+
+  .calendar-day,
+  .calendar-empty-cell {
+    min-height: 64px;
+  }
+
+  .calendar-day {
+    padding: 8px 2px;
+  }
+
+  .calendar-day-number {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+
+  .calendar-entry-dot {
+    bottom: 6px;
+  }
+
+  .check-in-modal-overlay {
+    align-items: start;
+    padding: 16px;
+  }
+
+  .check-in-modal {
+    max-height: none;
+    padding: 22px 18px;
+  }
+
+  .check-in-actions {
+    flex-direction: column-reverse;
+  }
+
+  .check-in-cancel-button,
+  .check-in-save-button {
+    width: 100%;
+  }
+}

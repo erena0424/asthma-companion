@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-labelledby="title description">
+  <title id="title">Asthma Copilot data-dependency graph</title>
+  <desc id="description">Actual data relationships among context, hybrid episode memory, deterministic derivations, generation, validation, and the API response.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#475569"/>
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #64748b; stroke-width: 2; }
+      .input { fill: #eff6ff; stroke: #2563eb; stroke-width: 2.5; }
+      .derived { fill: #f5f3ff; stroke: #7c3aed; stroke-width: 2.5; }
+      .knowledge { fill: #ecfeff; stroke: #0891b2; stroke-width: 2.5; }
+      .memory { fill: #f0fdfa; stroke: #0d9488; stroke-width: 2.5; }
+      .guard { fill: #fffbeb; stroke: #d97706; stroke-width: 2.5; }
+      .model { fill: #fdf2f8; stroke: #db2777; stroke-width: 2.5; }
+      .result { fill: #f0fdf4; stroke: #16a34a; stroke-width: 2.5; }
+      .boundary { fill: #f8fafc; stroke: #2563eb; stroke-width: 2.5; stroke-dasharray: 10 8; }
+      .arrow { fill: none; stroke: #475569; stroke-width: 2.1; marker-end: url(#arrow); }
+      .secondary { fill: none; stroke: #94a3b8; stroke-width: 1.8; marker-end: url(#arrow); }
+      .heading { font: 700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; text-anchor: middle; }
+      .subtitle { font: 500 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; text-anchor: middle; }
+      .section { font: 700 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #1e3a8a; letter-spacing: 1px; }
+      .label { font: 650 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; text-anchor: middle; }
+      .small { font: 500 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; text-anchor: middle; }
+      .edgeLabel { font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; text-anchor: middle; paint-order: stroke; stroke: #ffffff; stroke-width: 4px; stroke-linejoin: round; }
+      .blue { fill: #1d4ed8; }
+      .purple { fill: #6d28d9; }
+      .teal { fill: #0f766e; }
+      .amber { fill: #92400e; }
+      .green { fill: #15803d; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="980" fill="#ffffff"/>
+  <text class="heading" x="800" y="38">Asthma Copilot data-dependency graph</text>
+  <text class="subtitle" x="800" y="64">Arrows show data dependencies; execution order is shown in node-flow.svg.</text>
+
+  <rect class="boundary" x="20" y="85" width="1560" height="860" rx="18"/>
+  <text class="section" x="50" y="115">SOURCE CONTEXT</text>
+  <text class="section" x="400" y="115">TYPED STATE</text>
+  <text class="section" x="770" y="115">DETERMINISTIC CONTEXT</text>
+  <text class="section" x="1080" y="115">GENERATION AND SAFETY</text>
+
+  <!-- Source context -->
+  <rect class="input" x="50" y="135" width="260" height="65" rx="10"/>
+  <text class="label blue" x="180" y="162">Immutable ML forecast</text>
+  <text class="small" x="180" y="184">risk, factors, top features</text>
+
+  <rect class="input" x="50" y="215" width="260" height="65" rx="10"/>
+  <text class="label blue" x="180" y="242">Calendar events</text>
+  <text class="small" x="180" y="264">Google / manual / request for tomorrow</text>
+
+  <rect class="input" x="50" y="295" width="260" height="65" rx="10"/>
+  <text class="label blue" x="180" y="322">Environment snapshot</text>
+  <text class="small" x="180" y="344">weather, air quality, pollen</text>
+
+  <rect class="input" x="50" y="375" width="260" height="65" rx="10"/>
+  <text class="label blue" x="180" y="402">User profile</text>
+  <text class="small" x="180" y="424">goals, triggers, sensitivities</text>
+
+  <rect class="input" x="50" y="455" width="260" height="70" rx="10"/>
+  <text class="label blue" x="180" y="482">Request and check-in</text>
+  <text class="small" x="180" y="504">question, symptoms, rescue puffs</text>
+
+  <!-- Episode memory (replaces generic PostgreSQL history box) -->
+  <rect class="memory" x="50" y="555" width="260" height="145" rx="10"/>
+  <text class="label teal" x="180" y="585">Episode memory (Postgres)</text>
+  <text class="small" x="180" y="610">retrospective summaries only</text>
+  <text class="small" x="180" y="632">pgvector embeddings + FTS</text>
+  <text class="small" x="180" y="654">no raw calendar rows embedded</text>
+  <text class="small" x="180" y="676">env / outcomes stay in metadata</text>
+
+  <rect class="box" x="50" y="725" width="260" height="55" rx="10"/>
+  <text class="label" x="180" y="747">Embedding provider</text>
+  <text class="small" x="180" y="767">Gemini or stub (local / CI)</text>
+
+  <rect class="box" x="50" y="805" width="260" height="65" rx="10"/>
+  <text class="label" x="180" y="832">Medical corpus</text>
+  <text class="small" x="180" y="854">CDC, EPA, NHLBI chunks</text>
+
+  <!-- Typed state aggregates request-scoped context. -->
+  <rect class="derived" x="400" y="230" width="290" height="220" rx="12"/>
+  <text class="label purple" x="545" y="264">CopilotState context</text>
+  <text class="small" x="545" y="295">forecast / calendar / environment</text>
+  <text class="small" x="545" y="321">profile / question / advice type</text>
+  <text class="small" x="545" y="347">symptoms / rescue puffs</text>
+  <text class="small" x="545" y="383">nodes return partial updates</text>
+  <text class="small" x="545" y="409">forecast remains unchanged</text>
+
+  <!-- Source routes stay in the open gutter and terminate at separate ports. -->
+  <path class="secondary" d="M310 167 H330 V265 H400"/>
+  <path class="secondary" d="M310 247 H345 V300 H400"/>
+  <path class="secondary" d="M310 327 H360 V335 H400"/>
+  <path class="secondary" d="M310 407 H375 V370 H400"/>
+  <path class="secondary" d="M310 490 H390 V405 H400"/>
+
+  <!-- Deterministic context -->
+  <rect class="derived" x="770" y="145" width="250" height="160" rx="12"/>
+  <text class="label purple" x="895" y="178">Hybrid episode retrieval</text>
+  <text class="small" x="895" y="204">query = calendar / life context</text>
+  <text class="small" x="895" y="226">(not pollen / AQI / ML factors)</text>
+  <text class="small" x="895" y="250">pgvector similarity + keyword FTS</text>
+  <text class="small" x="895" y="274">top episodes + analysis pool</text>
+
+  <rect class="derived" x="770" y="350" width="250" height="120" rx="12"/>
+  <text class="label purple" x="895" y="387">Personal insights</text>
+  <text class="small" x="895" y="413">patterns, trends, statistics</text>
+  <text class="small" x="895" y="437">computed from analysis pool</text>
+
+  <rect class="knowledge" x="770" y="585" width="250" height="135" rx="12"/>
+  <text class="label" x="895" y="622">Medical knowledge</text>
+  <text class="small" x="895" y="648">trigger-matched authoritative</text>
+  <text class="small" x="895" y="670">chunks filtered by audience</text>
+  <text class="small" x="895" y="692">and safety metadata</text>
+
+  <!-- State and storage dependencies -->
+  <path class="arrow" d="M690 285 H730 V210 H770"/>
+  <text class="edgeLabel" x="738" y="200">ranking context</text>
+  <path class="arrow" d="M310 620 H735 V250 H770"/>
+  <text class="edgeLabel" x="520" y="610">stored episodes</text>
+  <path class="secondary" d="M310 752 H700 V280"/>
+  <text class="edgeLabel" x="520" y="742">query embedding</text>
+  <path class="arrow" d="M895 305 V350"/>
+  <text class="edgeLabel" x="955" y="332">analysis pool</text>
+  <path class="arrow" d="M690 425 H725 V635 H770"/>
+  <text class="edgeLabel" x="731" y="555">trigger terms</text>
+  <path class="arrow" d="M310 837 H745 H770 V680"/>
+  <text class="edgeLabel" x="530" y="827">approved chunks</text>
+
+  <!-- Prompt assembly -->
+  <rect class="guard" x="1080" y="300" width="250" height="220" rx="12"/>
+  <text class="label amber" x="1205" y="338">Guarded prompt context</text>
+  <text class="small" x="1205" y="366">typed request context</text>
+  <text class="small" x="1205" y="391">ranked history and insights</text>
+  <text class="small" x="1205" y="416">retrieved medical evidence</text>
+  <text class="small" x="1205" y="451">untrusted-data boundaries</text>
+  <text class="small" x="1205" y="476">and medication guardrails</text>
+
+  <!-- Routes enter distinct prompt ports without crossing any node. -->
+  <path class="secondary" d="M690 270 H710 V145 H1050 V350 H1080"/>
+  <text class="edgeLabel" x="875" y="138">request context</text>
+  <path class="arrow" d="M1020 215 H1050 V390 H1080"/>
+  <text class="edgeLabel" x="1052" y="270">history</text>
+  <path class="arrow" d="M1020 410 H1080"/>
+  <text class="edgeLabel" x="1050" y="400">insights</text>
+  <path class="arrow" d="M1020 652 H1050 V465 H1080"/>
+  <text class="edgeLabel" x="1052" y="570">evidence</text>
+
+  <!-- Generation and validation -->
+  <rect class="model" x="1380" y="350" width="170" height="120" rx="12"/>
+  <text class="label" x="1465" y="389">LLM registry</text>
+  <text class="small" x="1465" y="416">Gemini, retry,</text>
+  <text class="small" x="1465" y="438">then Claude</text>
+  <path class="arrow" d="M1330 410 H1380"/>
+
+  <rect class="result" x="1350" y="590" width="230" height="140" rx="12"/>
+  <text class="label green" x="1465" y="628">Output validator</text>
+  <text class="small" x="1465" y="655">schema and medication safety</text>
+  <text class="small" x="1465" y="678">evidence and provenance</text>
+  <text class="small" x="1465" y="701">attached deterministically</text>
+  <path class="arrow" d="M1465 470 V590"/>
+
+  <rect class="result" x="1350" y="800" width="230" height="70" rx="12"/>
+  <text class="label green" x="1465" y="829">API advice response</text>
+  <text class="small" x="1465" y="853">advice / evidence / warnings</text>
+  <path class="arrow" d="M1465 730 V800"/>
+</svg>

@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="560" viewBox="0 0 1500 560" role="img" aria-labelledby="title description">
+  <title id="title">Exact Asthma Copilot LangGraph node flow</title>
+  <desc id="description">The graph runs calendar, environment, profile, history, insights, knowledge, prompt guardrails, LLM, and validate nodes in sequence between START and END.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#475569"/>
+    </marker>
+    <style>
+      .node { fill: #ffffff; stroke: #64748b; stroke-width: 2; }
+      .context { fill: #eff6ff; stroke: #2563eb; stroke-width: 2.5; }
+      .compute { fill: #f5f3ff; stroke: #7c3aed; stroke-width: 2.5; }
+      .guard { fill: #fffbeb; stroke: #d97706; stroke-width: 2.5; }
+      .model { fill: #fdf2f8; stroke: #db2777; stroke-width: 2.5; }
+      .valid { fill: #f0fdf4; stroke: #16a34a; stroke-width: 2.5; }
+      .terminal { fill: #0f172a; stroke: #0f172a; stroke-width: 2; }
+      .arrow { fill: none; stroke: #475569; stroke-width: 2.5; marker-end: url(#arrow); }
+      .name { font: 700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; text-anchor: middle; }
+      .field { font: 500 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; text-anchor: middle; }
+      .step { font: 700 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #64748b; text-anchor: middle; }
+      .terminalText { font: 700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #ffffff; text-anchor: middle; }
+      .heading { font: 700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; text-anchor: middle; }
+      .legend { font: 500 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <rect width="1500" height="560" fill="#ffffff"/>
+  <text class="heading" x="750" y="38">Exact compiled LangGraph execution order</text>
+  <text class="legend" x="750" y="64">Each node receives CopilotState and returns only the fields shown below.</text>
+
+  <!-- First row -->
+  <rect class="terminal" x="30" y="130" width="90" height="64" rx="32"/>
+  <text class="terminalText" x="75" y="168">START</text>
+
+  <path class="arrow" d="M120 162 H165"/>
+  <text class="step" x="142" y="148">1</text>
+  <rect class="context" x="165" y="105" width="190" height="114" rx="11"/>
+  <text class="name" x="260" y="146">calendar</text>
+  <text class="field" x="260" y="174">writes</text>
+  <text class="field" x="260" y="194">state.calendar</text>
+
+  <path class="arrow" d="M355 162 H400"/>
+  <text class="step" x="377" y="148">2</text>
+  <rect class="context" x="400" y="105" width="190" height="114" rx="11"/>
+  <text class="name" x="495" y="146">environment</text>
+  <text class="field" x="495" y="174">writes</text>
+  <text class="field" x="495" y="194">state.environment</text>
+
+  <path class="arrow" d="M590 162 H635"/>
+  <text class="step" x="612" y="148">3</text>
+  <rect class="context" x="635" y="105" width="190" height="114" rx="11"/>
+  <text class="name" x="730" y="146">profile</text>
+  <text class="field" x="730" y="174">writes</text>
+  <text class="field" x="730" y="194">state.profile</text>
+
+  <path class="arrow" d="M825 162 H870"/>
+  <text class="step" x="847" y="148">4</text>
+  <rect class="context" x="870" y="105" width="210" height="114" rx="11"/>
+  <text class="name" x="975" y="138">history</text>
+  <text class="field" x="975" y="166">hybrid retrieval writes</text>
+  <text class="field" x="975" y="186">state.history + pool</text>
+
+  <path class="arrow" d="M1080 162 H1125"/>
+  <text class="step" x="1102" y="148">5</text>
+  <rect class="compute" x="1125" y="105" width="210" height="114" rx="11"/>
+  <text class="name" x="1230" y="143">insights</text>
+  <text class="field" x="1230" y="171">writes patterns, trends,</text>
+  <text class="field" x="1230" y="192">and statistics</text>
+
+  <!-- Turn to second row -->
+  <path class="arrow" d="M1335 162 H1410 V350 H1335"/>
+  <text class="step" x="1419" y="260">6</text>
+
+  <!-- Second row, right to left -->
+  <rect class="compute" x="1125" y="295" width="210" height="114" rx="11"/>
+  <text class="name" x="1230" y="336">knowledge</text>
+  <text class="field" x="1230" y="364">writes trigger-matched</text>
+  <text class="field" x="1230" y="385">state.knowledge</text>
+
+  <path class="arrow" d="M1125 352 H1080"/>
+  <text class="step" x="1102" y="338">7</text>
+  <rect class="guard" x="850" y="295" width="230" height="114" rx="11"/>
+  <text class="name" x="965" y="336">prompt_guardrails</text>
+  <text class="field" x="965" y="364">writes the bounded</text>
+  <text class="field" x="965" y="385">state.prompt</text>
+
+  <path class="arrow" d="M850 352 H805"/>
+  <text class="step" x="827" y="338">8</text>
+  <rect class="model" x="615" y="295" width="190" height="114" rx="11"/>
+  <text class="name" x="710" y="336">llm</text>
+  <text class="field" x="710" y="364">writes response, provider,</text>
+  <text class="field" x="710" y="385">and warnings</text>
+
+  <path class="arrow" d="M615 352 H570"/>
+  <text class="step" x="592" y="338">9</text>
+  <rect class="valid" x="350" y="295" width="220" height="114" rx="11"/>
+  <text class="name" x="460" y="336">validate</text>
+  <text class="field" x="460" y="364">writes</text>
+  <text class="field" x="460" y="385">state.validated_response</text>
+
+  <path class="arrow" d="M350 352 H305"/>
+  <rect class="terminal" x="200" y="320" width="105" height="64" rx="32"/>
+  <text class="terminalText" x="252" y="358">END</text>
+
+  <!-- State explanation -->
+  <rect x="200" y="465" width="1135" height="58" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text class="legend" x="767" y="490">LangGraph merges each partial update into the same CopilotState before invoking the next node.</text>
+  <text class="legend" x="767" y="512">The ML forecast enters as input and remains unchanged throughout this sequence.</text>
+</svg>

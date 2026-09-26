@@ -1,0 +1,32 @@
+[
+  {
+    "layer": 1,
+    "tags": ["pollen", "allergens", "inflammation"],
+    "title": "Pollen and airway inflammation",
+    "body": "Pollen exposure can trigger allergic inflammation in the airways, increasing bronchial hyperresponsiveness and symptom risk in sensitized individuals with asthma."
+  },
+  {
+    "layer": 1,
+    "tags": ["humidity", "cold_air", "weather"],
+    "title": "Cold air and humidity",
+    "body": "Cold, dry air and rapid temperature changes can provoke bronchoconstriction. High humidity may worsen symptoms for some patients while low humidity can irritate airways."
+  },
+  {
+    "layer": 1,
+    "tags": ["air_quality", "aqi", "pollution", "pm2_5"],
+    "title": "Air quality and asthma",
+    "body": "Elevated particulate matter and air pollution indices are associated with increased asthma symptoms and rescue medication use. Follow your action plan when AQI is poor."
+  },
+  {
+    "layer": 1,
+    "tags": ["night_symptoms", "symptoms", "flare"],
+    "title": "Nighttime symptoms",
+    "body": "Nocturnal symptoms suggest suboptimal asthma control and may precede daytime worsening. Persistent night symptoms warrant review with your care team per GINA guidelines."
+  },
+  {
+    "layer": 1,
+    "tags": ["rescue_inhaler", "inhaler", "saba"],
+    "title": "Rescue inhaler use",
+    "body": "Increased short-acting beta-agonist use indicates worsening control. Three or more days of increased rescue use per week is a signal to escalate per asthma action plans."
+  }
+]

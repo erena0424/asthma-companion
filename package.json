@@ -1,0 +1,17 @@
+{
+  "scripts": {
+    "dev": "cd asthma-app/frontend && npm run dev && cd ../../",
+    "frontend": "npm run dev",
+    "host": "cd asthma-app/frontend && npm run dev -- --host && cd ../../",
+    "build": "cd asthma-app/frontend && npm run build && cd ../../",
+    "deploy": "npm run build && git subtree push --prefix asthma-app/frontend/docs origin gh-pages",
+    "done": "node ./scripts/frontend-done.js",
+    "backend-api": "python ./scripts/backend.py",
+    "backend-db": "cd asthma-app && docker compose up -d",
+    "backend": "cd asthma-app && run_api.sh",
+    "backend-stop-db": "cd asthma-app && docker compose down"
+  },
+  "dependencies": {
+    "re-resizable": "^6.11.2"
+  }
+}

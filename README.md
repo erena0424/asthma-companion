@@ -1,1 +1,1 @@
-# asthma-companion
+# Lobelia-asthma-companion

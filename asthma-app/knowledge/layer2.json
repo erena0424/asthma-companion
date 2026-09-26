@@ -1,0 +1,32 @@
+[
+  {
+    "layer": 2,
+    "tags": ["pollen", "exercise", "outdoor"],
+    "title": "Managing pollen during outdoor activity",
+    "body": "Check pollen forecasts before outdoor exercise. Consider pre-treatment per your action plan, warm up indoors, and shower after exposure to reduce allergen load."
+  },
+  {
+    "layer": 2,
+    "tags": ["sleep", "recovery", "rest"],
+    "title": "Sleep and asthma recovery",
+    "body": "Adequate sleep supports immune regulation and recovery. Poor sleep the night before activity may increase perceived breathlessness and symptom sensitivity."
+  },
+  {
+    "layer": 2,
+    "tags": ["exercise", "activity", "sports"],
+    "title": "Exercise with asthma",
+    "body": "Most people with asthma can exercise safely with proper warm-up and controller therapy. Reduce intensity if cough, wheezing, or chest tightness increase during activity."
+  },
+  {
+    "layer": 2,
+    "tags": ["monitoring", "symptoms", "action_plan"],
+    "title": "Symptom monitoring",
+    "body": "Track daytime and nighttime symptoms, activity limitation, and rescue inhaler use daily. Patterns over several days are more informative than a single reading."
+  },
+  {
+    "layer": 2,
+    "tags": ["dust", "indoor", "triggers"],
+    "title": "Indoor trigger reduction",
+    "body": "Reduce dust mites and indoor allergens with regular cleaning, HEPA filtration where appropriate, and avoiding smoke or strong chemical irritants."
+  }
+]

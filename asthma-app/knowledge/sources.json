@@ -1,0 +1,181 @@
+{
+    "sources": [
+        {
+            "id": "cdc-controlling-asthma",
+            "publisher": "CDC",
+            "title": "Controlling Asthma",
+            "url": "https://www.cdc.gov/asthma/control/index.html",
+            "format": "html",
+            "version": "live",
+            "tags": [
+                "triggers",
+                "air_quality",
+                "pollen",
+                "environment"
+            ],
+            "audience": "patient",
+            "medication_change_allowed": false,
+            "advice_types": [
+                "daily",
+                "air_quality",
+                "exercise"
+            ],
+            "enabled": true
+        },
+        {
+            "id": "cdc-living-with-asthma",
+            "publisher": "CDC",
+            "title": "Living with Asthma",
+            "url": "https://www.cdc.gov/asthma/living-with/index.html",
+            "format": "html",
+            "version": "live",
+            "tags": [
+                "action_plan",
+                "emergency_signs",
+                "adherence",
+                "exercise"
+            ],
+            "audience": "patient",
+            "medication_change_allowed": false,
+            "advice_types": [
+                "daily",
+                "emergency",
+                "action_plan",
+                "adherence",
+                "exercise"
+            ],
+            "enabled": true
+        },
+        {
+            "id": "cdc-emergency-preparedness",
+            "publisher": "CDC",
+            "title": "What to Do When an Emergency Occurs",
+            "url": "https://www.cdc.gov/asthma/emergency/index.html",
+            "format": "html",
+            "version": "live",
+            "tags": [
+                "emergency",
+                "action_plan",
+                "adherence"
+            ],
+            "exclude_sections": [
+                "Resources"
+            ],
+            "audience": "patient",
+            "medication_change_allowed": false,
+            "advice_types": [
+                "emergency",
+                "action_plan",
+                "adherence"
+            ],
+            "enabled": true
+        },
+        {
+            "id": "cdc-exhale-patient-guide",
+            "publisher": "CDC",
+            "title": "EXHALE Guide for People With Asthma, Their Families, and Their Caregivers",
+            "url": "https://www.cdc.gov/national-asthma-control-program/php/exhale/pdfs/exhale-guide-people-with-asthma-families-caregivers-508.pdf",
+            "format": "pdf",
+            "version": "current",
+            "tags": [
+                "self_management",
+                "adherence",
+                "action_plan",
+                "exercise"
+            ],
+            "audience": "patient",
+            "medication_change_allowed": false,
+            "advice_types": [
+                "daily",
+                "action_plan",
+                "adherence",
+                "exercise"
+            ],
+            "enabled": false,
+            "disabled_reason": "Multi-column PDF extraction interleaves unrelated text; use the CDC HTML sources instead."
+        },
+        {
+            "id": "airnow-fires-and-health",
+            "publisher": "EPA AirNow",
+            "title": "Fires and Your Health",
+            "url": "https://www.airnow.gov/air-quality-and-health/fires-and-your-health/",
+            "format": "html",
+            "version": "live",
+            "tags": [
+                "aqi",
+                "wildfire",
+                "smoke",
+                "exercise",
+                "air_quality"
+            ],
+            "exclude_sections": [
+                "Publications",
+                "Resources"
+            ],
+            "audience": "patient",
+            "medication_change_allowed": false,
+            "advice_types": [
+                "air_quality",
+                "wildfire",
+                "exercise"
+            ],
+            "enabled": true
+        },
+        {
+            "id": "nhlbi-2020-clinician-guide",
+            "publisher": "NHLBI",
+            "title": "2020 Focused Updates to the Asthma Management Guidelines: Clinician's Guide",
+            "url": "https://www.nhlbi.nih.gov/sites/default/files/publications/Asthma%20Clinicians%20Guide%20508_02-03-21.pdf",
+            "format": "pdf",
+            "version": "2020",
+            "tags": [
+                "clinical_guidelines",
+                "medication",
+                "treatment"
+            ],
+            "audience": "clinician",
+            "medication_change_allowed": false,
+            "advice_types": [
+                "clinical_reference"
+            ],
+            "enabled": true
+        },
+        {
+            "id": "gina-approved-local",
+            "publisher": "GINA",
+            "title": "Approved local GINA resource",
+            "path": "local/gina-approved.pdf",
+            "format": "local_pdf",
+            "version": null,
+            "tags": [
+                "guidelines",
+                "management"
+            ],
+            "audience": "clinician",
+            "medication_change_allowed": false,
+            "advice_types": [
+                "clinical_reference"
+            ],
+            "enabled": false
+        },
+        {
+            "id": "ala-approved-local",
+            "publisher": "American Lung Association",
+            "title": "Approved local American Lung Association resource",
+            "path": "local/ala-approved.pdf",
+            "format": "local_pdf",
+            "version": null,
+            "tags": [
+                "action_plan",
+                "education"
+            ],
+            "audience": "patient",
+            "medication_change_allowed": false,
+            "advice_types": [
+                "action_plan",
+                "emergency"
+            ],
+            "enabled": false
+        }
+    ]
+}
