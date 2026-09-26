@@ -5,7 +5,9 @@ from __future__ import annotations
 from datetime import date as Date
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, EmailStr, Field
+import re
+
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 class EmergencyContact(BaseModel):
@@ -18,6 +20,24 @@ class EmergencyContact(BaseModel):
     email: Optional[str] = None
 
     model_config = {"extra": "allow"}
+
+
+class EmergencyContactWrite(EmergencyContact):
+    """Validate new PATCH writes while tolerating historical records on read."""
+    id: Optional[str] = Field(default=None, max_length=128)
+    firstName: Optional[str] = Field(default=None, max_length=100)
+    lastName: Optional[str] = Field(default=None, max_length=100)
+    phone: str = Field(min_length=7, max_length=40)
+    email: Optional[str] = Field(default=None, max_length=254)
+    model_config = {"extra": "forbid"}
+
+    @model_validator(mode="after")
+    def validate_contact(self):
+        if not any(value and value.strip() for value in (self.firstName, self.lastName)):
+            raise ValueError("Contact name is required")
+        if not re.fullmatch(r"[+0-9 ().-]+", self.phone) or not 7 <= sum(c.isdigit() for c in self.phone) <= 15:
+            raise ValueError("Phone must contain 7 to 15 digits and ordinary phone punctuation")
+        return self
 
 
 class UserProfileFields(BaseModel):
@@ -55,12 +75,12 @@ class UserProfileUpdate(UserProfileFields):
     profile_image_url: Optional[str] = Field(default=None, max_length=2048)
     date_of_birth: Optional[Date] = None
     emergency_contact: Optional[str] = None
-    emergency_contacts: Optional[List[EmergencyContact]] = None
+    emergency_contacts: Optional[List[EmergencyContactWrite]] = None
     preferred_reminder: Optional[str] = None
     contact_method: Optional[str] = None
     preferred_environment: Optional[str] = None
-    care_goal: Optional[str] = None
-    accessibility_needs: Optional[str] = None
+    care_goal: Optional[str] = Field(default=None, max_length=1000)
+    accessibility_needs: Optional[str] = Field(default=None, max_length=1000)
     trigger_preferences: Optional[List[str]] = None
     trigger_sensitivities: Optional[Dict[str, float]] = None
     symptoms: Optional[List[str]] = None

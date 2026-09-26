@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from datetime import date, datetime, timezone
+
+from fastapi import APIRouter, Depends, Response
+from pydantic import BaseModel, Field, StrictBool, field_validator
+
 from sqlalchemy.orm import Session
 
 from api.deps import get_current_user
@@ -77,6 +81,10 @@ def apply_profile_fields(user: User, data: UserProfileUpdate | dict) -> None:
         payload["emergency_contacts"] = contacts
         if payload.get("emergency_contact") is None:
             payload["emergency_contact"] = emergency_contacts_to_legacy_string(contacts)
+        # The canonical array must also clear the legacy fallback.
+        if not contacts:
+            user.emergency_contact = None
+            payload["emergency_contact"] = None
 
     for key in _PROFILE_COLUMNS:
         if key in payload and payload[key] is not None:
@@ -98,3 +106,57 @@ def update_me(
     db.commit()
     db.refresh(user)
     return _to_profile(user)
+
+
+class SupportMemoryWrite(BaseModel):
+    text: str = Field(min_length=1, max_length=500)
+    check_in_date: date | None = None
+    approved: StrictBool
+    model_config = {"extra": "forbid"}
+
+    @field_validator("approved")
+    @classmethod
+    def require_approval(cls, value: bool) -> bool:
+        if not value:
+            raise ValueError("Explicit approval is required")
+        return value
+
+    @field_validator("text")
+    @classmethod
+    def clean_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Summary cannot be blank")
+        return value
+
+
+@router.get("/me/support-memory")
+def get_support_memory(user: User = Depends(get_current_user)) -> dict:
+    return {"summary": user.support_memory}
+
+
+@router.put("/me/support-memory")
+def save_support_memory(
+    body: SupportMemoryWrite,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    user.support_memory = {
+        "text": body.text,
+        "check_in_date": body.check_in_date.isoformat() if body.check_in_date else None,
+        "saved_at": datetime.now(timezone.utc).isoformat(),
+        "source": "user-reported",
+    }
+    db.commit()
+    db.refresh(user)
+    return {"summary": user.support_memory}
+
+
+@router.delete("/me/support-memory", status_code=204)
+def delete_support_memory(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Response:
+    user.support_memory = None
+    db.commit()
+    return Response(status_code=204)
