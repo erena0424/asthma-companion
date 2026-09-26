@@ -1,39 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "react-bootstrap";
+import { useOutletContext } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import {
   homeRiskHeading,
   loadDisplayForecast,
 } from "../../helper-functions/getForecast";
 import { logInhalerPuff } from "../../helper-functions/checkIns";
-
-const FALLBACK_LOCATION = {
-  lat: 43.0731,
-  lon: -89.4012,
-};
-
-function getUserLocation() {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) {
-      resolve(FALLBACK_LOCATION);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-        });
-      },
-      () => resolve(FALLBACK_LOCATION),
-      {
-        enableHighAccuracy: false,
-        timeout: 7000,
-        maximumAge: 300000,
-      }
-    );
-  });
-}
 
 function formatName(user) {
   return (
@@ -56,6 +29,8 @@ function HomePage() {
   const [puffMessage, setPuffMessage] = useState("");
   const [puffError, setPuffError] = useState("");
 
+  const { location, locationPermission } = useOutletContext();
+
   useEffect(() => {
     let cancelled = false;
 
@@ -63,8 +38,6 @@ function HomePage() {
       try {
         setStatus("loading");
         setErrorMessage("");
-
-        const location = await getUserLocation();
 
         const data = await loadDisplayForecast({
           lat: location.lat,
@@ -96,14 +69,14 @@ function HomePage() {
       }
     }
 
-    if (token) {
+    if (token && location) {
       loadForecast();
     }
 
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, location]);
 
   async function handleRescueInhalerClick() {
     if (!token || loggingPuff) return;
@@ -162,23 +135,13 @@ function HomePage() {
     "Complete yesterday’s check-in to receive a personalized recommendation.";
 
   return (
-    <main className="home-page">
-      <section className="home-header">
-        <h1>Hi, {formatName(user)}!</h1>
-
-        <div
-          className="home-profile-placeholder"
-          aria-hidden="true"
-        />
-      </section>
-
-      <hr />
+    <main>
 
       {status === "loading" && (
         <section className="home-state-card">
           <h2>Loading your forecast...</h2>
-
-          <p>
+          <br />
+          <p className="paragraph">
             We are combining your check-in and environmental data.
           </p>
         </section>
@@ -187,19 +150,21 @@ function HomePage() {
       {status === "check-in-required" && (
         <section className="home-state-card">
           <h2>Check-in required</h2>
-          <p>{errorMessage}</p>
+          <br />
+          <p className="paragraph">{errorMessage}</p>
         </section>
       )}
 
       {status === "error" && (
         <section className="home-state-card home-state-error">
           <h2>Forecast unavailable</h2>
-          <p>{errorMessage}</p>
+          <br />
+          <p className="paragraph">{errorMessage}</p>
         </section>
       )}
 
       {status === "success" && forecast && (
-        <>
+        <div className="vertical-40">
           <section className="home-risk-section">
             <div className={`risk-summary risk-${riskClass}`}>
               <h2>
@@ -218,34 +183,40 @@ function HomePage() {
                 <hr />
 
                 <p>{nextStep}</p>
+                {
+                  locationPermission !== "granted" ?
+                    <p className="error-text-dark note">Allow location access to receive more accurate feedback based on your local environmental conditions. This will help us find potential environmental triggers near you.</p>
+                  : ""
+                }
               </article>
 
-              <button
-                className="rescue-inhaler-button"
-                type="button"
-                onClick={handleRescueInhalerClick}
-                disabled={loggingPuff}
-              >
-                {loggingPuff
-                  ? "Logging..."
-                  : "I used my rescue inhaler."}
-              </button>
+              <div className="vertical-8 at-middle-center">
+                <Button
+                  className="button-error-dark btn-large-text"
+                  onClick={handleRescueInhalerClick}
+                  disabled={loggingPuff}
+                >
+                  {loggingPuff
+                    ? "Logging..."
+                    : "I used my rescue inhaler."}
+                </Button>
 
-              {puffMessage && (
-                <p className="inhaler-log-success">
-                  {puffMessage}
-                </p>
-              )}
+                {puffMessage && (
+                  <p className="inhaler-log-success">
+                    {puffMessage}
+                  </p>
+                )}
 
-              {puffError && (
-                <p className="inhaler-log-error">
-                  {puffError}
-                </p>
-              )}
+                {puffError && (
+                  <p className="inhaler-log-error">
+                    {puffError}
+                  </p>
+                )}
+              </div>
             </div>
           </section>
 
-          <hr />
+          <hr style={{margin: 0}}/>
 
           <ForecastCard
             title="Predicted Triggers"
@@ -262,7 +233,7 @@ function HomePage() {
               {forecast.advice.disclaimer}
             </p>
           )}
-        </>
+        </div>
       )}
     </main>
   );
@@ -275,23 +246,25 @@ function ForecastCard({ title, items }) {
 
       <hr />
 
-      <div className="forecast-tags">
-        {items.map((item, index) => (
-          <span
-            className="forecast-tag"
-            key={`${item}-${index}`}
-          >
-            {item}
-          </span>
-        ))}
-      </div>
+      <div className="vertical-16 at-middle-center">
+        <div className="forecast-tags">
+          {items.map((item, index) => (
+            <span
+              className="forecast-tag"
+              key={`${item}-${index}`}
+            >
+              {item}
+            </span>
+          ))}
+        </div>
 
-      <button
-        className="more-details-button"
-        type="button"
-      >
-        More Details
-      </button>
+        <Button
+          className="button-dark btn-large-text"
+          type="button"
+        >
+          More Details
+        </Button>
+      </div>
     </article>
   );
 }

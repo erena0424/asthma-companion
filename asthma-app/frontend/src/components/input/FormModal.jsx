@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { Container, Row, Col, Button } from "react-bootstrap";
 import CancelButton from "../input/CancelButton";
 
@@ -8,22 +9,27 @@ function FormModal({
     onSubmit,
     submitText="Submit",
     buttonError="",
+    buttonSuccess="",
     shake=false,
-    showSubmit=true
+    showSubmit=true,
+    color="dark"
 }) {
 
-    return (
+    const colorClass = color === "light" ? "cream-body" : color === "green" ? "green-body" : "dark-green-body";
+    const buttonClass = color === "light" ? "button-dark" : color === "green" ? "button-dark" : "button-light";
+
+    return createPortal(
         <div className="form-modal-overlay">
             <Container
-                className="dark-green-body form-modal p-5 vertical-32 vertical-fill position-relative"
+                className={`${colorClass} form-modal p-5 vertical-0 vertical-fill position-relative`}
             >
             {
                 // x button will be placed in top-right corner absolutely (without affecting placement of other items)
-                <CancelButton className="button-light p-2 absolute-top-right" onClick={onHide} />
+                <CancelButton className={`${buttonClass} p-2 absolute-top-right`} onClick={onHide} />
             }
                 <Row>
                     <Col className="form-modal-header">
-                        <h2 className="text-center">
+                        <h2 className="text-center avoid-right">
                             {title}
                         </h2>
                         <hr />
@@ -36,11 +42,14 @@ function FormModal({
 
                 {showSubmit && (
                     <Row className="vertical-16 form-modal-footer flex-shrink-0">
-                        <div className="error-text-light at-middle-center">
+                        <p className="error-text-light at-middle-center">
                             {buttonError}
-                        </div>
+                        </p>
+                        <p className="at-middle-center">
+                            {buttonSuccess}
+                        </p>
                         <Button
-                            className={`button-light btn-medium-text ${
+                            className={`${buttonClass} btn-medium-text ${
                                 shake ? "shake" : ""
                             }`}
                             onClick={onSubmit}
@@ -52,7 +61,8 @@ function FormModal({
 
             </Container>
 
-        </div>
+        </div>,
+        document.body
     );
 }
 

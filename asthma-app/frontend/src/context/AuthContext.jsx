@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { getProfile } from "../helper-functions/authentication";
+import { getProfile, isJwt } from "../helper-functions/authentication";
 
 const AuthContext = createContext(null);
 
@@ -41,12 +41,14 @@ export function AuthProvider({ children }) {
 
     // call whenever need to get current user data from API
     const refreshUserProfile = useCallback(async () => {
-        if (!token) return;
+        if (!isJwt(token)) return;
 
         const result = await getProfile(token);
 
         if (typeof result === "string") {
             console.error(result);
+            // clear all user data
+            logout();
             return;
         }
 

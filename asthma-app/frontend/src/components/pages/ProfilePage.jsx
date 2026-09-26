@@ -17,6 +17,7 @@ import ProfileCircle from "../input/ProfileCircle";
 import { Card, Button } from "react-bootstrap"
 import EmergencyContactsManager from "../input/EmergencyContactsManager";
 import FormModal from "../input/FormModal";
+import CancelButton from "../input/CancelButton";
 
 function calculateAge(dateOfBirth) {
   if (!dateOfBirth) return null;
@@ -384,7 +385,7 @@ function ProfilePage() {
 
   if (pageStatus === "loading") {
     return (
-      <main className="profile-page profile-page-state">
+      <main className="profile-page-state">
         <h1>Profile</h1>
         <p>Loading your profile...</p>
       </main>
@@ -393,7 +394,7 @@ function ProfilePage() {
 
   if (pageStatus === "error") {
     return (
-      <main className="profile-page profile-page-state">
+      <main className="profile-page-state">
         <h1>Profile</h1>
         <p className="profile-error">{pageError}</p>
       </main>
@@ -401,7 +402,7 @@ function ProfilePage() {
   }
 
   return (
-    <main className="profile-page vertical-40">
+    <main className="vertical-40">
 
       {actionError && !activeEditor && (
         <p className="profile-global-error">
@@ -586,15 +587,14 @@ function ProfilePage() {
                     >
                       <span>{item}</span>
 
-                      <button
-                        type="button"
+                      <CancelButton
                         onClick={() =>
-                          removeListItem(item)
-                        }
-                        aria-label={`Remove ${item}`}
-                      >
-                        ×
-                      </button>
+                            removeListItem(item)
+                          }
+                        className={"button-dark"}
+                        width="20"
+                        height="20"
+                      />
                     </div>
                   ))}
                 </div>

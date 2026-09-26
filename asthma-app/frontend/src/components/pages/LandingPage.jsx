@@ -176,6 +176,7 @@ function LandingPage() {
           overflowY: "auto",
           width: "100%",
           minHeight: "100dvh",
+          height: 100
       }}
     >
       <motion.div
@@ -184,6 +185,7 @@ function LandingPage() {
           width: totalWidth,
           minHeight: "100dvh",
           x: xOffset,
+          height: 100
         }}
       >
 
@@ -192,6 +194,7 @@ function LandingPage() {
           style={{
             width: panelWidth,
             minHeight: "100dvh",
+            height: 100
           }}
         >
           <LandingContent

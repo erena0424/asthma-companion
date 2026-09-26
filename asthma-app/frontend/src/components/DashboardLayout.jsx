@@ -6,10 +6,12 @@ import { useAuth } from "../context/AuthContext";
 import ProfileCircle from "./input/ProfileCircle";
 import FormModal from "./input/FormModal";
 import Chatbot from './input/Chatbot';
+import SpinnerOverlay from './input/SpinnerOverlay';
 import useIsSmallScreen from "../helper-functions/useIsSmallScreen";
+import { getUserLocation } from "../helper-functions/location";
 
 function DashboardLayout() {
-  const location = useLocation();
+  const appLocation = useLocation();
   const { token, user, logout, refreshUserProfile } = useAuth();
   const isSmallScreen = useIsSmallScreen();
 
@@ -17,6 +19,17 @@ function DashboardLayout() {
   const [navbarExpanded, setNavbarExpanded] = useState(false);
 
   const navbarRef = useRef(null);
+
+  // request user location
+  const [location, setLocation] = useState(null);
+  const [locationPermission, setLocationPermission] = useState("checking");
+
+  useEffect(() => {
+    getUserLocation().then((result) => {
+      setLocation(result.location);
+      setLocationPermission(result.permission);
+    });
+  }, []);
 
   useEffect(() => {
     refreshUserProfile();
@@ -50,7 +63,7 @@ function DashboardLayout() {
   // Collapse navbar whenever the route changes
   useEffect(() => {
     setNavbarExpanded(false);
-  }, [location.pathname]);
+  }, [appLocation.pathname]);
 
   const pageNames = {
     [urls.home]: `Hi, ${user?.name || "User"}!`,
@@ -60,7 +73,7 @@ function DashboardLayout() {
     [urls.chat]: "Chat",
   };
 
-  const currentPage = pageNames[location.pathname];
+  const currentPage = pageNames[appLocation.pathname];
 
   function openLogoutModal() {
     setShowLogoutModal(true);
@@ -130,7 +143,7 @@ function DashboardLayout() {
       )}
 
       {/* Header */}
-      <div className="p-4">
+      <div className="p-4 pb-0">
         <div
           className="horizontal at-middle-center"
           style={{ justifyContent: "space-between" }}
@@ -148,8 +161,8 @@ function DashboardLayout() {
       </div>
 
       {/* Content */}
-      <Container fluid className="w-100 p-0">
-        <Outlet />
+      <Container fluid className="w-100 p-4">
+        <Outlet context={{ location, locationPermission }} />
       </Container>
 
       {/* Logout Confirmation */}
@@ -167,6 +180,7 @@ function DashboardLayout() {
           </div>
         </FormModal>
       )}
+      <SpinnerOverlay visible={user?.name === undefined} message="Loading your information..." />
     </>
   );
 }

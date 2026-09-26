@@ -1,14 +1,21 @@
 import { Button } from "react-bootstrap";
 
-function CancelButton({ size = 48, onClick, className = "", style = {}, width = "36", height = "36" }) {
+function CancelButton({ onClick, className = "", style = {}, width = "36", height = "36", ariaLabel = "cancel" }) {
   return (
     <Button
         className={`${className}`}
         style={style}
         onClick={onClick}
-        aria-label={"cancel"}
+        aria-label={ariaLabel}
     >
-        <svg width={width} height={height} viewBox="0 0 16 16" fill="none">
+        <svg
+            style={{
+            width: `clamp(${width * 2 / 3}px, 5vw, ${width}px)`,
+            height: `clamp(${height * 2 / 3}px, 5vw, ${height}px)`,
+            }}
+            viewBox="0 0 16 16"
+            fill="none"
+        >
             <path
                 d="
                     M 8 8
