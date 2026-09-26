@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { getProfile, isJwt } from "../helper-functions/authentication";
 
 const AuthContext = createContext(null);
@@ -7,6 +7,9 @@ export function AuthProvider({ children }) {
     // get token, if it exists
     const [token, setToken] = useState(() => localStorage.getItem("token"));
     const [user, setUser] = useState(null);
+    const [profileLoading, setProfileLoading] = useState(false);
+    const [profileError, setProfileError] = useState("");
+    const profileRequest = useRef(0);
     // setup complete or not
     const [setupComplete, setSetupComplete] = useState(() => {
         return localStorage.getItem("setupComplete") === "true";
@@ -39,30 +42,38 @@ export function AuthProvider({ children }) {
         }));
     }
 
-    // call whenever need to get current user data from API
+    // Ignore responses invalidated by a newer refresh or logout.
     const refreshUserProfile = useCallback(async () => {
         if (!isJwt(token)) return;
-
+        const request = ++profileRequest.current;
+        setProfileLoading(true);
+        setProfileError("");
         const result = await getProfile(token);
-
-        if (typeof result === "string") {
-            console.error(result);
-            // clear all user data
+        if (request !== profileRequest.current) return;
+        setProfileLoading(false);
+        if (result.status === "unauthorized") {
             logout();
-            return;
+        } else if (result.status === "error") {
+            setProfileError(result.message);
+        } else {
+            setUser(result.profile);
         }
-
-        setUser(result);
     }, [token]);
 
     // stores token in React and localStorage
     function storeToken(jwt) {
+        profileRequest.current += 1;
+        setProfileLoading(false);
+        setProfileError("");
         localStorage.setItem("token", jwt);
         setToken(jwt);
     }
 
     // clears all user data
     function logout() {
+        profileRequest.current += 1;
+        setProfileLoading(false);
+        setProfileError("");
         localStorage.removeItem("token");
         localStorage.removeItem("setupComplete");
         setToken(null);
@@ -80,6 +91,8 @@ export function AuthProvider({ children }) {
         <AuthContext.Provider value={{
             token,
             user,
+            profileLoading,
+            profileError,
             updateUser,
             refreshUserProfile,
             storeToken,

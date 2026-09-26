@@ -12,7 +12,7 @@ import { getUserLocation } from "../helper-functions/location";
 
 function DashboardLayout() {
   const appLocation = useLocation();
-  const { token, user, logout, refreshUserProfile } = useAuth();
+  const { token, user, logout, refreshUserProfile, profileLoading, profileError } = useAuth();
   const isSmallScreen = useIsSmallScreen();
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -162,6 +162,14 @@ function DashboardLayout() {
 
       {/* Content */}
       <Container fluid className="w-100 p-4">
+        {profileError && (
+          <div role="alert" className="mb-3">
+            <p>{profileError}</p>
+            <button type="button" onClick={refreshUserProfile} disabled={profileLoading}>
+              Retry loading profile
+            </button>
+          </div>
+        )}
         <Outlet context={{ location, locationPermission }} />
       </Container>
 
@@ -180,7 +188,7 @@ function DashboardLayout() {
           </div>
         </FormModal>
       )}
-      <SpinnerOverlay visible={user?.name === undefined} message="Loading your information..." />
+      <SpinnerOverlay visible={profileLoading} message="Loading your information..." />
     </>
   );
 }
