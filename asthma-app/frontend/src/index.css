@@ -1166,10 +1166,23 @@ input::-webkit-password-reveal-button {
 
 /********************************* CHATBOT ****************************************/
 
+.companion {
+  width: 20rem;
+  height: fit-content;
+  flex-shrink: 0;
+}
+
 .chatbot {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  gap: var(--space-16);
+}
+
+.chatbot-content {
+  display: flex;
+  flex: 1;
   min-height: 0;
   gap: var(--space-16);
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Form, Button } from "react-bootstrap";
+import { Form, Button, Image } from "react-bootstrap";
 import ArrowButton from "./ArrowButton";
 import { useChat } from "../../context/ChatContext";
 
@@ -52,23 +52,27 @@ function ChatContent() {
                     </Form.Select>
                 </label>
             </fieldset>
-            <div className="chatbot-conversation" role="log" aria-label="Companion conversation">
-                {messages.map((message) => (
-                    <div
-                        key={message.id}
-                        className={`chatbot-row ${message.sender}`}
-                    >
+            <div className="chatbot-content">
+                <Image className="companion" src="bunny.gif" alt="Companion"/>
+                <div className="chatbot-conversation" role="log" aria-label="Companion conversation">
+                    {messages.map((message) => (
                         <div
-                            className={`chatbot-bubble ${message.sender}`}
-                            style={{ whiteSpace: "pre-wrap" }}
+                            key={message.id}
+                            className={`chatbot-row ${message.sender}`}
                         >
-                            {message.text}
+                            <div
+                                className={`chatbot-bubble ${message.sender}`}
+                                style={{ whiteSpace: "pre-wrap" }}
+                            >
+                                {message.text}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
 
-                <div ref={messagesEndRef} />
+                    <div ref={messagesEndRef} />
+                </div>
             </div>
+                                
 
             {(openingFailed || canRequestOpening) && <Button disabled={isSending} onClick={() => openConversation(true)}>{openingFailed ? "Try greeting again" : "Show my daily greeting"}</Button>}
 
@@ -111,6 +115,7 @@ function ChatContent() {
             >
                 Clear Chat
             </Button>
+            
         </ div>
     );
 }
