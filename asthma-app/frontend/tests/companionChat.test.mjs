@@ -45,6 +45,25 @@ try {
         assert.equal(calls, 1);
     });
     const click = async label => { const b = [...document.querySelectorAll("button")].find(b => b.textContent.trim() === label || b.getAttribute("aria-label") === label); assert.ok(b); await act(async () => b.click()); };
+    await test("checkbox and tone refresh completed and pending greetings without stale overwrite", async () => {
+        await act(async () => document.querySelector('[type="checkbox"]').click());
+        assert.equal(request.body.include_saved_context, true);
+        assert.equal(chat.messages[0].text, "A supportive reply");
+        pending = true;
+        await act(async () => chat.setPersona("calm"));
+        const finishOld = resolvePending;
+        pending = false;
+        reply = {message:"Context off greeting", generation_status:"generated", context_token:"off"};
+        await act(async () => document.querySelector('[type="checkbox"]').click());
+        assert.equal(request.body.include_saved_context, false);
+        assert.equal(request.body.persona, "calm");
+        reply = {message:"Stale greeting", generation_status:"generated"};
+        await act(async () => finishOld());
+        assert.equal(chat.messages[0].text, "Context off greeting");
+        reply = {message:"A supportive reply", generation_status:"generated", context_token:"revision", history_accepted:true};
+        await act(async () => chat.setPersona("warm"));
+        assert.equal(chat.messages[0].text, "A supportive reply");
+    });
     await test("initial request excludes synthetic greeting and technical metadata", async () => {
         assert.equal(document.querySelector("select").value, "warm");
         assert.equal(document.querySelector('[type="checkbox"]').checked, false);
@@ -63,6 +82,7 @@ try {
         assert.equal(request.body.history[0].role,"user");
     });
     await test("tone and explicit opt-in reset history; fallback has no technical metadata", async () => {
+        reply = { message: "Please try again shortly.", generation_status: "fallback" };
         await act(async () => {
             const select = document.querySelector("select"); select.value = "direct"; select.dispatchEvent(new Event("change", { bubbles: true }));
             document.querySelector('[type="checkbox"]').click();
@@ -83,7 +103,7 @@ try {
         pending = true;
         let work;
         await act(async () => { work = chat.sendMessage("Pending"); });
-        assert.ok(document.querySelector("fieldset").disabled);
+        assert.ok(document.querySelector("textarea").disabled);
         await click("Clear Chat");
         await act(async () => { resolvePending(); await work; });
         assert.equal(chat.messages.length, 1);
@@ -126,6 +146,11 @@ try {
         assert.equal(chat.messages[0].text, "Hello! What's on your mind today?");
         assert.equal(chat.isSending, false);
         pending = false;
+        const beforeManual = calls;
+        await click("Show my daily greeting");
+        assert.equal(calls, beforeManual + 1);
+        assert.equal(chat.messages[0].text, "A fresh greeting");
+        await click("Clear Chat");
         await act(async () => chat.sendMessage("Start here"));
         assert.equal(request.body.opening_message, null);
     });

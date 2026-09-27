@@ -8,7 +8,7 @@ function ChatContent() {
         messages,
         isSending,
         sendMessage,
-        openConversation, openingFailed, clearChat, persona, setPersona, includeSavedContext, setIncludeSavedContext
+        openConversation, openingFailed, canRequestOpening, clearChat, persona, setPersona, includeSavedContext, setIncludeSavedContext
     } = useChat();
 
     useEffect(() => { openConversation(); }, [openConversation]);
@@ -42,7 +42,7 @@ function ChatContent() {
 
     return (
         <div className="chatbot">
-            <fieldset disabled={isSending} style={{ border: 0, padding: 0 }}>
+            <fieldset style={{ border: 0, padding: 0 }}>
                 <label className="d-block">
                     Reply tone
                     <Form.Select value={persona} onChange={e => setPersona(e.target.value)}>
@@ -80,7 +80,7 @@ function ChatContent() {
                 <div ref={messagesEndRef} />
             </div>
 
-            {openingFailed && <Button disabled={isSending} onClick={() => openConversation(true)}>Try greeting again</Button>}
+            {(openingFailed || canRequestOpening) && <Button disabled={isSending} onClick={() => openConversation(true)}>{openingFailed ? "Try greeting again" : "Show my daily greeting"}</Button>}
 
             <div className="chatbot-input">
                 <div

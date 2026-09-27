@@ -68,7 +68,10 @@ Opening the visible floating chat or full chat page calls authenticated
 tone and current saved-context opt-in. A hidden/collapsed chat makes no opening
 request. Navigation/re-render does not generate another greeting. Clear Chat
 cancels pending output and leaves a neutral greeting; it does not immediately
-call the model again. Account changes reset this state. A failed opening shows
+call the model again; “Show my daily greeting” allows an explicit fresh request.
+Changing saved-context opt-in starts a new greeting with the new setting. Changing
+tone before any user message refreshes the greeting. Superseded requests cannot
+overwrite the new greeting, and hidden chat still makes no requests. Account changes reset this state. A failed opening shows
 a natural greeting with an explicit retry button; there is no automatic retry loop.
 
 The existing companion provider receives current cached forecast facts and

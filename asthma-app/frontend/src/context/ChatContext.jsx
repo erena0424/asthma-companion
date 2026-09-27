@@ -15,6 +15,8 @@ export function ChatProvider({ children }) {
     const [persona, setPersona] = useState("warm");
     const [includeSavedContext, setIncludeSavedContext] = useState(false);
     const [openingFailed, setOpeningFailed] = useState(false);
+    const [canRequestOpening, setCanRequestOpening] = useState(false);
+    const hasUserMessages = useRef(false);
     const openingAttempted = useRef(false);
     const openingMessage = useRef(null);
     const requestVersion = useRef(0);
@@ -30,6 +32,8 @@ export function ChatProvider({ children }) {
         openingAttempted.current = true;
         openingMessage.current = null;
         setOpeningFailed(false);
+        setCanRequestOpening(true);
+        hasUserMessages.current = false;
         history.current = [];
         contextToken.current = null;
         sending.current = false;
@@ -48,11 +52,22 @@ export function ChatProvider({ children }) {
 
     const changeSavedContext = useCallback((enabled) => {
         clearChat();
+        openingAttempted.current = false;
         setIncludeSavedContext(enabled);
     }, [clearChat]);
 
+    const changePersona = useCallback((value) => {
+        if (value === persona) return;
+        if (!hasUserMessages.current) {
+            clearChat();
+            openingAttempted.current = false;
+        }
+        setPersona(value);
+    }, [persona, clearChat]);
+
     const openConversation = useCallback(async (retry = false) => {
-        if (!token || sending.current || (openingAttempted.current && !retry)) return;
+        if (!token || sending.current || hasUserMessages.current || (openingAttempted.current && !retry)) return;
+        setCanRequestOpening(false);
         openingAttempted.current = true;
         const version = ++requestVersion.current;
         sending.current = true;
@@ -88,6 +103,8 @@ export function ChatProvider({ children }) {
             return;
         }
         openingAttempted.current = true;
+        hasUserMessages.current = true;
+        setCanRequestOpening(false);
         setOpeningFailed(false);
         const version = ++requestVersion.current;
         sending.current = true;
@@ -124,8 +141,8 @@ export function ChatProvider({ children }) {
         }
     }, [token, persona, includeSavedContext]);
 
-    return <ChatContext.Provider value={{ messages, isSending, sendMessage, clearChat, openConversation, openingFailed,
-        persona, setPersona, includeSavedContext, setIncludeSavedContext: changeSavedContext }}>
+    return <ChatContext.Provider value={{ messages, isSending, sendMessage, clearChat, openConversation, openingFailed, canRequestOpening,
+        persona, setPersona: changePersona, includeSavedContext, setIncludeSavedContext: changeSavedContext }}>
         {children}
     </ChatContext.Provider>;
 }
