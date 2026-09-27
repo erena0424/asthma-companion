@@ -37,7 +37,7 @@ try {
         await act(async () => root.render(React.createElement(AuthProvider, null, React.createElement(ChatProvider, null, React.createElement(Capture)))));
         assert.equal(calls, 1);
         assert.ok(request.url.endsWith("/opening"));
-        assert.deepEqual(request.body, {persona:"warm", include_saved_context:false});
+        assert.deepEqual(request.body, {persona:"warm", include_saved_context:true});
         visible = false;
         await act(async () => root.render(React.createElement(AuthProvider, null, React.createElement(ChatProvider, null, React.createElement(Capture)))));
         visible = true;
@@ -45,17 +45,17 @@ try {
         assert.equal(calls, 1);
     });
     const click = async label => { const b = [...document.querySelectorAll("button")].find(b => b.textContent.trim() === label || b.getAttribute("aria-label") === label); assert.ok(b); await act(async () => b.click()); };
-    await test("checkbox and tone refresh completed and pending greetings without stale overwrite", async () => {
-        await act(async () => document.querySelector('[type="checkbox"]').click());
-        assert.equal(request.body.include_saved_context, true);
+    await test("context and tone refresh completed and pending greetings without stale overwrite", async () => {
+        await act(async () => chat.setIncludeSavedContext(false));
+        assert.equal(request.body.include_saved_context, false);
         assert.equal(chat.messages[0].text, "A supportive reply");
         pending = true;
         await act(async () => chat.setPersona("calm"));
         const finishOld = resolvePending;
         pending = false;
         reply = {message:"Context off greeting", generation_status:"generated", context_token:"off"};
-        await act(async () => document.querySelector('[type="checkbox"]').click());
-        assert.equal(request.body.include_saved_context, false);
+        await act(async () => chat.setIncludeSavedContext(true));
+        assert.equal(request.body.include_saved_context, true);
         assert.equal(request.body.persona, "calm");
         reply = {message:"Stale greeting", generation_status:"generated"};
         await act(async () => finishOld());
@@ -66,10 +66,10 @@ try {
     });
     await test("initial request excludes synthetic greeting and technical metadata", async () => {
         assert.equal(document.querySelector("select").value, "warm");
-        assert.equal(document.querySelector('[type="checkbox"]').checked, false);
+        assert.equal(document.querySelector('[type="checkbox"]'), null);
         await act(async () => chat.sendMessage("Hello"));
         assert.ok(request.url.endsWith("/v1/companion/chat"));
-        assert.deepEqual(request.body, { message: "Hello", persona: "warm", include_saved_context: false, history: [], context_token: "revision", opening_message: "A supportive reply" });
+        assert.deepEqual(request.body, { message: "Hello", persona: "warm", include_saved_context: true, history: [], context_token: "revision", opening_message: "A supportive reply" });
         assert.ok(!document.querySelector('[role="log"]').textContent.includes("stored forecast"));
         assert.ok(!document.body.textContent.includes("Each message"));
     });
@@ -85,7 +85,7 @@ try {
         reply = { message: "Please try again shortly.", generation_status: "fallback" };
         await act(async () => {
             const select = document.querySelector("select"); select.value = "direct"; select.dispatchEvent(new Event("change", { bubbles: true }));
-            document.querySelector('[type="checkbox"]').click();
+            chat.setIncludeSavedContext(true);
         });
         reply = { message: "Please try again shortly.", generation_status: "fallback", forecast: { status: "stale", data: { forecast_for: "2026-01-01" } } };
         await act(async () => chat.sendMessage("Follow-up"));
@@ -123,7 +123,7 @@ try {
         assert.equal(chat.messages.length, 1);
         assert.equal(chat.messages[0].text, "Ready again");
         assert.equal(chat.persona, "warm");
-        assert.equal(chat.includeSavedContext, false);
+        assert.equal(chat.includeSavedContext, true);
         assert.equal(localStorage.length, 1); // auth token only; no chat storage
     });
     await test("opening failure retries only on request and clear discards pending greeting", async () => {

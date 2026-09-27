@@ -1,7 +1,7 @@
 import { API_URL } from "../config.js";
 
 // Bounded successful exchanges live only in the current browser session.
-export async function askCompanion({ token, message, persona = "warm", includeSavedContext = false, history = [], contextToken = null, openingMessage = null, opening = false }) {
+export async function askCompanion({ token, message, persona = "warm", includeSavedContext = true, history = [], contextToken = null, openingMessage = null, opening = false }) {
   const response = await fetch(`${API_URL}/v1/companion/${opening ? "opening" : "chat"}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },

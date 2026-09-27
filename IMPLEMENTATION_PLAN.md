@@ -1,3 +1,14 @@
+<!-- Current default update: supersedes earlier opt-in wording below. -->
+
+Companion chat now includes the current user's saved profile, approved summary and
+bounded today/tomorrow calendar plans by default. The chat checkbox and repeated
+provider disclosure paragraph have been removed. These selected fields and the
+message are processed by the configured AI provider; provider retention is not
+claimed to be zero. API callers can still send `include_saved_context: false`.
+No new storage or inference is introduced. Warm tone uses brief, specific,
+varied encouragement instead of repetitive advice; it must not invent feelings,
+health facts or reassuring outcomes. Calm/Direct remain available.
+
 # Tomorrow's existing-web-app implementation plan
 
 ## Authorized supportive companion extension — current demo scope

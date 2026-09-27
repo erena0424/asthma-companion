@@ -29,7 +29,7 @@ class HistoryMessage(BaseModel):
 class CompanionRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     message: str = Field(min_length=1, max_length=1000)
-    include_saved_context: StrictBool = False
+    include_saved_context: StrictBool = True
     persona: Literal["warm", "calm", "direct"] = "warm"
 
     opening_message: str | None = Field(default=None, max_length=1200)
@@ -65,7 +65,7 @@ async def companion_chat(body: CompanionRequest,
 
 class OpeningRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    include_saved_context: StrictBool = False
+    include_saved_context: StrictBool = True
     persona: Literal["warm", "calm", "direct"] = "warm"
 
 

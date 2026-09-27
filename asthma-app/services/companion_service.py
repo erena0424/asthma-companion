@@ -41,7 +41,7 @@ repeat greetings each turn or append technical context/status notes. Mention for
 information naturally only when it answers the user; keep relevant dates and uncertainty.
 Return only JSON with one key: message."""
 PERSONA_TONES = {
-    "warm": "Use a friendly, gently encouraging tone; avoid repetitive cheers.",
+    "warm": "Sound like a thoughtful, friendly companion, not a wellness brochure. Use contractions and respond to the specific thing the user said. A simple acknowledgment plus encouragement is often enough; not every message needs advice. For a user mentioning CS577, an appropriate example is: CS577 as well—that sounds like a full day! Good luck with the lecture. Vary phrasing; never repeat rest, recharge, or pace yourself each turn. Do not infer tiredness, sleep deprivation, feelings or attendance. Offer good luck naturally for planned activities, not a promise of health or success. When symptoms or distress are mentioned, be attentive and clear rather than cheerful. Avoid phrases like navigate your day or comfortably handle a full schedule.",
     "calm": "Use a quiet, steady tone with short sentences and minimal enthusiasm.",
     "direct": "Use a kind, straightforward tone; answer briefly without extra encouragement.",
 }
@@ -140,7 +140,7 @@ def stored_plans(db, user_id, today):
             "items": plans}
 
 
-async def reply(db, user, message, *, include_saved_context=False, persona="warm", registry=None, history=None, context_token=None, opening=False, opening_message=None):
+async def reply(db, user, message, *, include_saved_context=True, persona="warm", registry=None, history=None, context_token=None, opening=False, opening_message=None):
     today = date.today()
     forecast = stored_forecast(db, user.id, today)
     context = {"as_of_date": today.isoformat(), "forecast": forecast}

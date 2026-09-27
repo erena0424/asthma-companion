@@ -88,9 +88,9 @@ class CompanionTests(unittest.TestCase):
     def test_approved_context_opt_in_correction_deletion_and_isolation(self):
         path='/v1/users/me/support-memory'
         self.client.put(path,headers=self.headers(),json={'text':'Prefer quiet evenings','approved':True})
-        self.chat()
+        self.chat(include_saved_context=False)
         self.assertNotIn('Prefer quiet evenings',self.mock.call_args.kwargs['prompt'])
-        self.chat(include_saved_context=True)
+        self.chat()
         prompt=self.mock.call_args.kwargs['prompt']
         self.assertIn('Prefer quiet evenings',prompt)
         for private in ('PRIVATE_NAME','PRIVATE_PHONE','user0@example.com'):
@@ -232,7 +232,7 @@ class CompanionTests(unittest.TestCase):
                     calendar_event=title, notes="PRIVATE_HEALTH_NOTE"))
             db.add(CheckIn(user_id=self.ids[1], date=today, calendar_event="OTHER_USER_PLAN"))
             db.commit()
-        self.chat()
+        self.chat(include_saved_context=False)
         self.assertNotIn("saved_plans", json.loads(self.mock.call_args.kwargs["prompt"])["context"])
         self.client.post("/v1/companion/opening", headers=self.headers(), json={"include_saved_context": True})
         prompt = self.mock.call_args.kwargs["prompt"]

@@ -13,7 +13,7 @@ export function ChatProvider({ children }) {
     const [messages, setMessages] = useState([INITIAL_MESSAGE]);
     const [isSending, setIsSending] = useState(false);
     const [persona, setPersona] = useState("warm");
-    const [includeSavedContext, setIncludeSavedContext] = useState(false);
+    const [includeSavedContext, setIncludeSavedContext] = useState(true);
     const [openingFailed, setOpeningFailed] = useState(false);
     const [canRequestOpening, setCanRequestOpening] = useState(false);
     const hasUserMessages = useRef(false);
@@ -47,7 +47,7 @@ export function ChatProvider({ children }) {
         clearChat();
         openingAttempted.current = false;
         setPersona("warm");
-        setIncludeSavedContext(false);
+        setIncludeSavedContext(true);
     }, [token, clearChat]);
 
     const changeSavedContext = useCallback((enabled) => {

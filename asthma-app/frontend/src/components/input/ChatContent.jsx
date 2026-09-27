@@ -8,7 +8,7 @@ function ChatContent() {
         messages,
         isSending,
         sendMessage,
-        openConversation, openingFailed, canRequestOpening, clearChat, persona, setPersona, includeSavedContext, setIncludeSavedContext
+        openConversation, openingFailed, canRequestOpening, clearChat, persona, setPersona
     } = useChat();
 
     useEffect(() => { openConversation(); }, [openConversation]);
@@ -51,16 +51,6 @@ function ChatContent() {
                         <option value="direct">Direct</option>
                     </Form.Select>
                 </label>
-                <label className="d-block mt-2">
-                    <input type="checkbox" checked={includeSavedContext}
-                        onChange={e => setIncludeSavedContext(e.target.checked)} />{" "}
-                    Include my saved profile, summary, and calendar plans
-                </label>
-                <small className="d-block">
-                    When checked, your care goal, accessibility needs, saved triggers,
-                    environment preference, approved summary, and today’s and tomorrow’s calendar plans are sent to the AI provider.
-                    A stored forecast may be included either way.
-                </small>
             </fieldset>
             <div className="chatbot-conversation" role="log" aria-label="Companion conversation">
                 {messages.map((message) => (
