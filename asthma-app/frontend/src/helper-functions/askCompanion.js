@@ -1,11 +1,11 @@
 import { API_URL } from "../config.js";
 
-// Single-turn chat. No conversation history or local profile content is sent.
-export async function askCompanion({ token, message, persona = "warm", includeSavedContext = false }) {
+// Bounded successful exchanges live only in the current browser session.
+export async function askCompanion({ token, message, persona = "warm", includeSavedContext = false, history = [], contextToken = null }) {
   const response = await fetch(`${API_URL}/v1/companion/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ message, persona, include_saved_context: includeSavedContext }),
+    body: JSON.stringify({ message, persona, include_saved_context: includeSavedContext, history, context_token: contextToken }),
   });
   const data = await response.json().catch(() => null);
   if (!response.ok) {
@@ -19,15 +19,8 @@ export async function askCompanion({ token, message, persona = "warm", includeSa
   return data;
 }
 
-export function companionMetadata(data) {
-  const notes = [];
-  if (data.generation_status === "fallback") notes.push("Reply unavailable; showing a predefined message.");
-  if (data.generation_status === "context_changed") notes.push("Saved context changed during this reply. Please try again.");
-  const forecast = data.forecast;
-  if (forecast?.status === "unavailable") notes.push("No stored forecast available.");
-  else if (forecast?.data?.forecast_for) {
-    const label = { current: "Current", stale: "Older", future: "Future" }[forecast.status] || "Stored";
-    notes.push(`${label} stored forecast for ${forecast.data.forecast_for}.`);
-  }
-  return notes.join(" ");
+export function boundedHistory(history) {
+  const recent = history.slice(-8);
+  while (recent.reduce((size, item) => size + item.content.length, 0) > 6000) recent.splice(0, 2);
+  return recent;
 }

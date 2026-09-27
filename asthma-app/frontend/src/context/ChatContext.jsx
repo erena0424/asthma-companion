@@ -1,11 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
-import { askCompanion, companionMetadata } from "../helper-functions/askCompanion";
+import { askCompanion, boundedHistory } from "../helper-functions/askCompanion";
 
 const ChatContext = createContext(null);
 const INITIAL_MESSAGE = {
     id: "initial", sender: "ai",
-    text: "Hello! What's on your mind today? Each message gets a separate reply; earlier chat messages aren't sent with it.",
+    text: "Hello! What's on your mind today?",
 };
 
 export function ChatProvider({ children }) {
@@ -15,12 +15,16 @@ export function ChatProvider({ children }) {
     const [persona, setPersona] = useState("warm");
     const [includeSavedContext, setIncludeSavedContext] = useState(false);
     const requestVersion = useRef(0);
+    const history = useRef([]);
+    const contextToken = useRef(null);
     const sending = useRef(false);
     const currentToken = useRef(token);
     currentToken.current = token;
 
     const clearChat = useCallback(() => {
         requestVersion.current += 1;
+        history.current = [];
+        contextToken.current = null;
         sending.current = false;
         setIsSending(false);
         setMessages([INITIAL_MESSAGE]);
@@ -31,6 +35,11 @@ export function ChatProvider({ children }) {
         setPersona("warm");
         setIncludeSavedContext(false);
     }, [token, clearChat]);
+
+    const changeSavedContext = useCallback((enabled) => {
+        clearChat();
+        setIncludeSavedContext(enabled);
+    }, [clearChat]);
 
     const sendMessage = useCallback(async (message) => {
         const trimmed = message.trim();
@@ -45,11 +54,17 @@ export function ChatProvider({ children }) {
         setMessages(prev => [...prev, { id: crypto.randomUUID(), sender: "user", text: trimmed }]);
         const stillCurrent = () => version === requestVersion.current && token === currentToken.current;
         try {
-            const data = await askCompanion({ token, message: trimmed, persona, includeSavedContext });
+            const data = await askCompanion({ token, message: trimmed, persona, includeSavedContext,
+                history: history.current, contextToken: contextToken.current });
             if (!stillCurrent()) return;
+            if (!data.history_accepted || data.generation_status !== "generated") history.current = [];
+            contextToken.current = data.context_token || null;
+            if (data.generation_status === "generated") history.current = boundedHistory([
+                ...history.current, { role: "user", content: trimmed },
+                { role: "assistant", content: data.message },
+            ]);
             setMessages(prev => [...prev, {
                 id: crypto.randomUUID(), sender: "ai", text: data.message,
-                metadata: companionMetadata(data),
             }]);
         } catch (error) {
             if (!stillCurrent()) return;
@@ -66,7 +81,7 @@ export function ChatProvider({ children }) {
     }, [token, persona, includeSavedContext]);
 
     return <ChatContext.Provider value={{ messages, isSending, sendMessage, clearChat,
-        persona, setPersona, includeSavedContext, setIncludeSavedContext }}>
+        persona, setPersona, includeSavedContext, setIncludeSavedContext: changeSavedContext }}>
         {children}
     </ChatContext.Provider>;
 }

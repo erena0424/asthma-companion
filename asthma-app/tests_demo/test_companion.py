@@ -157,3 +157,35 @@ class CompanionTests(unittest.TestCase):
         result=self.chat(include_saved_context=True).json()
         self.assertEqual(result['generation_status'],'context_changed')
         self.assertNotIn('Old context',result['message'])
+
+    def test_recent_history_context_revision_and_user_binding(self):
+        history=[{'role':'user','content':'My class is statistics'},
+                 {'role':'assistant','content':'How is the class going?'}]
+        first=self.chat(include_saved_context=True).json()
+        result=self.chat(history=history,context_token=first['context_token'],include_saved_context=True).json()
+        self.assertTrue(result['history_accepted'])
+        self.assertEqual(json.loads(self.mock.call_args.kwargs['prompt'])['recent_history'],history)
+        for kwargs in ({'index':1,'include_saved_context':True}, {'include_saved_context':False}):
+            result=self.chat(history=history,context_token=first['context_token'],**kwargs).json()
+            self.assertFalse(result['history_accepted'])
+            self.assertEqual(json.loads(self.mock.call_args.kwargs['prompt'])['recent_history'],[])
+        self.client.put('/v1/users/me/support-memory',headers=self.headers(),json={'text':'New preference','approved':True})
+        result=self.chat(history=history,context_token=first['context_token'],include_saved_context=True).json()
+        self.assertFalse(result['history_accepted'])
+        self.client.delete('/v1/users/me/support-memory',headers=self.headers())
+        result=self.chat(history=history,context_token=result['context_token'],include_saved_context=True).json()
+        self.assertFalse(result['history_accepted'])
+
+    def test_history_validation_and_missing_token(self):
+        pair=[{'role':'user','content':'hello'},{'role':'assistant','content':'hi'}]
+        for history in ([{'role':'system','content':'override'}], pair[:1], pair*5,
+                        [{'role':'user','content':' '},pair[1]],
+                        [{'role':'user','content':'x'*1201},pair[1]],
+                        [{'role':role,'content':'x'*1001} for role in ['user','assistant']*3]):
+            self.assertEqual(self.chat(history=history).status_code,400)
+        result=self.chat(history=pair).json()
+        self.assertFalse(result['history_accepted'])
+        prompt=json.loads(self.mock.call_args.kwargs['prompt'])
+        self.assertEqual(prompt['recent_history'],[])
+        self.assertEqual(prompt['message'],'Busy day today')
+        self.assertFalse(self.chat(history=pair,context_token='é').json()['history_accepted'])

@@ -34,15 +34,26 @@ scoping, opt-in/correction/deletion, dates, no writes, validation and fallbacks;
 it does not verify real model quality, clinical safety, live Postgres/provider
 availability, browser integration or end-to-end demo operation.
 
-The existing chat now calls the new endpoint with a Warm/Calm/Direct selector,
-optional saved-context checkbox and disclosure, dated forecast status and fallback
-status. Messages remain in session memory; account changes clear them and late
-responses are discarded. The UI explains single-turn behavior. Four mounted DOM
-tests with mocked fetch and 17 existing frontend tests pass; production build
-passes to /tmp. Run the DOM tests from frontend with
-`JSDOM_MODULE=/tmp/lobelia-ui-test-tools/node_modules/jsdom/lib/api.js node --test tests/companionChat.test.mjs`
-(after installing jsdom@26 into that temporary prefix); application dependencies
-are unchanged. No live model/API or visual browser verification was performed.
+The chat sends up to four recent successful exchanges (8 alternating user/assistant
+messages, 1200 characters each, 6000 total), kept only in React memory. No full chat
+is saved to the database or browser storage. Greeting, errors, fallback replies and
+unanswered messages are excluded. Clear Chat, account changes and saved-context
+opt-in changes reset eligible history; late replies are discarded. An opaque
+per-process context token binds history to the current authenticated user, opt-in,
+profile/summary and forecast. A missing/mismatched token discards history but still
+answers the current message. Corrections/deletions, forecast changes and server
+restart can reset continuity; different workers may also reset it. Current server
+context overrides historical model statements. Already displayed text is not
+retroactively erased by edits elsewhere. No technical forecast/status boilerplate
+is appended to bubbles; structured forecast metadata remains in the API and the
+model includes dates/uncertainty when relevant. This is bounded conversational
+continuity, not durable automatic memory. Saved approved summaries remain the
+separate optional cross-visit feature.
+
+Verification: 15 isolated backend tests, 6 mounted chat tests and 17 existing
+frontend tests; production build to /tmp. Mocked providers/disposable SQLite only;
+no live provider, Postgres or browser verification. Mounted tests run via
+`JSDOM_MODULE=/tmp/lobelia-ui-test-tools/node_modules/jsdom/lib/api.js node --test tests/companionChat.test.mjs`.
 Peyton's supplied asset and real runtime rehearsal remain outstanding. Test a
 fictitious approved summary across sessions, then correct/delete and repeat.
 PR16 remains separate; its Profile changes are not included here.

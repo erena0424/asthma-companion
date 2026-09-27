@@ -71,7 +71,6 @@ function ChatContent() {
                             style={{ whiteSpace: "pre-wrap" }}
                         >
                             {message.text}
-                            {message.metadata && <small className="d-block mt-2">{message.metadata}</small>}
                         </div>
                     </div>
                 ))}

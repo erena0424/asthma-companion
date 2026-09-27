@@ -806,7 +806,7 @@ Response (200):
   "generation_status":"generated",
   "forecast":{"status":"unavailable","data":null},
   "context_sources":["reported_profile","approved_summary"],
-  "persona_version":"companion-v1"
+  "persona_version":"companion-v2"
 }
 ```
 Illustrative message only; generated text varies. `generation_status` is `generated`
@@ -857,7 +857,32 @@ No arbitrary system prompt is accepted. Invalid persona is 400.
 changes during generation, discard the generated reply and return static fallback;
 frontend may offer retry. Already-sent provider input cannot be retracted. Backend
 checks immediately before return; it cannot recall a reply already delivered.
-The endpoint is single-turn: visible UI history is not sent or stored here. Saved
-context supplies continuity across visits; this is not full multi-turn memory.
+The chat sends up to four recent successful exchanges (8 alternating user/assistant
+messages, 1200 characters each, 6000 total), kept only in React memory. No full chat
+is saved to the database or browser storage. Greeting, errors, fallback replies and
+unanswered messages are excluded. Clear Chat, account changes and saved-context
+opt-in changes reset eligible history; late replies are discarded. An opaque
+per-process context token binds history to the current authenticated user, opt-in,
+profile/summary and forecast. A missing/mismatched token discards history but still
+answers the current message. Corrections/deletions, forecast changes and server
+restart can reset continuity; different workers may also reset it. Current server
+context overrides historical model statements. Already displayed text is not
+retroactively erased by edits elsewhere. No technical forecast/status boilerplate
+is appended to bubbles; structured forecast metadata remains in the API and the
+model includes dates/uncertainty when relevant. This is bounded conversational
+continuity, not durable automatic memory. Saved approved summaries remain the
+separate optional cross-visit feature.
+
+Request optional `history` defaults to `[]`: objects with only `role` (`user` or
+`assistant`) and nonblank `content`. Complete alternating pairs starting with
+`user` are required. Unknown fields/roles, odd counts, more than 8 items, content
+above 1200 characters, or total content above 6000 characters return 400.
+Optional `context_token` is null or a string of at most 64 characters. Return the
+last response token with the next history request. Response adds `context_token`
+(opaque string for generated replies, null on fallback/context change) and
+`history_accepted` (boolean). Treat all client history as untrusted data, never
+system instructions. The token is context binding, not proof a submitted transcript
+is authentic; authenticated clients control their own submitted text.
+
 Date relevance follows existing server-local `date.today()` convention; it may
 differ from a user's timezone. The persona/version are informational, not storage.
