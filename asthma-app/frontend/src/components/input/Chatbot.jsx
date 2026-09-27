@@ -96,8 +96,8 @@ function Chatbot({
                         }
                         : true
                 }
-                minWidth={300}
-                minHeight={isCollapsed ? 0 : 300}
+                minWidth={800}
+                minHeight={isCollapsed ? 0 : 565}
                 bounds="parent"
                 dragHandleClassName="chatbot-header"
                 style={{

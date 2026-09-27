@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Form, Button, Row, Image } from "react-bootstrap";
+import { Form, Button, Image } from "react-bootstrap";
 import ArrowButton from "./ArrowButton";
 import { useChat } from "../../context/ChatContext";
 
@@ -40,8 +40,9 @@ function ChatContent() {
 
     return (
         <div className="chatbot">
-            <Row>
-                <Image className="img-fluid" src="asthma-app\frontend\src\assets\images\bunny.gif" alt="Companion"/>
+            <div className="chatbot-content">
+                <Image className="companion" src="bunny.gif" alt="Companion"/>
+            
                 <div className="chatbot-conversation">
                     {messages.map((message) => (
                         <div
@@ -59,7 +60,8 @@ function ChatContent() {
 
                     <div ref={messagesEndRef} />
                 </div>
-            </Row>
+            </div>
+                                
 
             <div className="chatbot-input">
                 <div
@@ -96,6 +98,7 @@ function ChatContent() {
             >
                 Clear Chat
             </Button>
+            
         </ div>
     );
 }
