@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Form, Button } from "react-bootstrap";
+import { Form, Button, Row, Image } from "react-bootstrap";
 import ArrowButton from "./ArrowButton";
 import { useChat } from "../../context/ChatContext";
 
@@ -40,23 +40,26 @@ function ChatContent() {
 
     return (
         <div className="chatbot">
-            <div className="chatbot-conversation">
-                {messages.map((message) => (
-                    <div
-                        key={message.id}
-                        className={`chatbot-row ${message.sender}`}
-                    >
+            <Row>
+                <Image className="img-fluid" src="asthma-app\frontend\src\assets\images\bunny.gif" alt="Companion"/>
+                <div className="chatbot-conversation">
+                    {messages.map((message) => (
                         <div
-                            className={`chatbot-bubble ${message.sender}`}
-                            style={{ whiteSpace: "pre-wrap" }}
+                            key={message.id}
+                            className={`chatbot-row ${message.sender}`}
                         >
-                            {message.text}
+                            <div
+                                className={`chatbot-bubble ${message.sender}`}
+                                style={{ whiteSpace: "pre-wrap" }}
+                            >
+                                {message.text}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
 
-                <div ref={messagesEndRef} />
-            </div>
+                    <div ref={messagesEndRef} />
+                </div>
+            </Row>
 
             <div className="chatbot-input">
                 <div
