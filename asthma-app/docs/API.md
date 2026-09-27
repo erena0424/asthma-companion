@@ -924,3 +924,24 @@ neutral greeting. Neither failure means a forecast was generated or refreshed.
 maximum 1200 characters). It is passed to the model only with a valid current
 `context_token`; otherwise it is discarded with history. It never becomes a
 system instruction. No additional database writes or provider are introduced.
+
+
+### Saved calendar plans in companion context
+
+With `include_saved_context:true`, `/v1/companion/opening` and `/v1/companion/chat`
+also read the current user's existing today/tomorrow calendar fields from
+`check_ins`. No external calendar fetch occurs. `context_sources` includes
+`saved_calendar_plans` only when selected entries exist. No response fields or
+request defaults change. No health/check-in fields accompany this calendar read.
+
+At most three plan titles per date (200 characters each) are sent: the existing
+free-text `calendar_event` uses its saved row date; structured `calendar_events`
+require an explicit matching date or all-day start date. Ambiguous timed dates
+are omitted. The two-day window uses server-local dates; user timezone is unknown.
+Plans are untrusted user-reported intentions, not attendance or medical guidance.
+Their dates are separate from the forecast target date. Missing plans are unknown.
+
+Selected plans are bound into `context_token`. Changing or clearing a selected
+plan invalidates previous history/opening; a concurrent change returns
+`generation_status: "context_changed"` with neutral fallback, as with other
+saved context. This does not retroactively remove previously displayed bubbles.

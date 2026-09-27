@@ -54,11 +54,11 @@ function ChatContent() {
                 <label className="d-block mt-2">
                     <input type="checkbox" checked={includeSavedContext}
                         onChange={e => setIncludeSavedContext(e.target.checked)} />{" "}
-                    Include my saved context
+                    Include my saved profile, summary, and calendar plans
                 </label>
                 <small className="d-block">
                     When checked, your care goal, accessibility needs, saved triggers,
-                    environment preference and approved summary are sent to the AI provider.
+                    environment preference, approved summary, and today’s and tomorrow’s calendar plans are sent to the AI provider.
                     A stored forecast may be included either way.
                 </small>
             </fieldset>

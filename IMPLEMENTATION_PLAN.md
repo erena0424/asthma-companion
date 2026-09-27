@@ -15,7 +15,8 @@ existing provider SDK configuration, JWT/DB and cached forecast models. Existing
 calls the new companion endpoint. No new
 schema or dependencies. Friendly, calm, concise persona is shared by this new
 endpoint's prompt; persona alone is not continuity. Request-opt-in saved context
-reads current user-confirmed profile fields and the latest approved summary.
+reads current user-confirmed profile fields, the latest approved summary, and
+bounded saved calendar plans for today and tomorrow (server-local date window).
 No full chat storage, episode recall, inferred memories or contact data sent to AI.
 Saving a summary and choosing to send saved context to the provider are distinct.
 
@@ -40,7 +41,7 @@ is saved to the database or browser storage. Static greetings, errors, fallback 
 unanswered messages are excluded. Clear Chat, account changes and saved-context
 opt-in changes reset eligible history; late replies are discarded. An opaque
 per-process context token binds history to the current authenticated user, opt-in,
-profile/summary and forecast. A missing/mismatched token discards history but still
+profile/summary, selected calendar plans and forecast. A missing/mismatched token discards history but still
 answers the current message. Corrections/deletions, forecast changes and server
 restart can reset continuity; different workers may also reset it. Current server
 context overrides historical model statements. Already displayed text is not
@@ -50,7 +51,8 @@ model includes dates/uncertainty when relevant. This is bounded conversational
 continuity, not durable automatic memory. Saved approved summaries remain the
 separate optional cross-visit feature.
 
-Verification: 17 isolated backend tests, 9 mounted chat tests and 17 existing
+Verification: 20 isolated backend tests (including calendar scope, dates, opt-in,
+correction/clear invalidation and in-flight changes), 9 mounted chat tests and 17 existing
 frontend tests; production build to /tmp. Mocked providers/disposable SQLite only;
 no live provider, Postgres or browser verification. Mounted tests run via
 `JSDOM_MODULE=/tmp/lobelia-ui-test-tools/node_modules/jsdom/lib/api.js node --test tests/companionChat.test.mjs`.
@@ -259,3 +261,23 @@ If time is tight: static character, three existing fields plus optional note,
 one saved contact, two small routes. Drop animation/chat/automatic-memory/environment,
 notifications and new clinical plan storage. Do not drop honest save/error states
 or misrepresent a placeholder/phone handoff as a completed capability.
+
+## Saved plans in the companion opening
+
+`services/companion_service.py` now reads existing `CheckIn.calendar_event` and
+`calendar_events` fields for only the authenticated user's today/tomorrow rows.
+No new schema, calendar sync, or forecast generation. Up to three plan titles per
+date, 200 characters each; descriptions, locations, contacts and symptom fields
+are excluded. Structured entries need an explicit matching calendar date (or an
+all-day start date); ambiguous timed entries are omitted. The existing Calendar
+UI's free-text plan is included using its saved row date. These are user-reported
+plans, not attendance. No events is unknown, not an empty schedule.
+
+Both opening and chat include these plans only with `include_saved_context:true`.
+The opt-in label discloses calendar inclusion. Exact dates stay distinct from the
+forecast target date; user timezone is unknown. Edits/clears change the history
+token; changes during generation suppress the reply. The opening can acknowledge
+a saved plan with gentle nonmedical encouragement, never inventing BuildFest,
+medication instructions, attendance or environmental readings. For the demo, save
+a fictitious plan in Calendar on the intended date and enable saved context.
+Live model wording and browser rehearsal remain unverified.

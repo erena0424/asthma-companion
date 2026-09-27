@@ -21,11 +21,11 @@ from sqlalchemy.pool import StaticPool
 from api import companion, users
 from api.errors import APIError, api_error_handler, validation_exception_handler
 from db.database import get_db
-from db.models import User, Forecast
+from db.models import User, Forecast, CheckIn
 from services.auth_service import create_access_token
 from services.companion_service import SelectedProviderRegistry, SYSTEM_PROMPT
 
-for table in (User.__table__, Forecast.__table__):
+for table in (User.__table__, Forecast.__table__, CheckIn.__table__):
     for column in table.columns:
         if isinstance(column.type, (ARRAY, JSONB)):
             column.type = JSON()
@@ -37,6 +37,7 @@ class CompanionTests(unittest.TestCase):
                                     connect_args={'check_same_thread': False})
         User.__table__.create(self.engine)
         Forecast.__table__.create(self.engine)
+        CheckIn.__table__.create(self.engine)
         self.ids = [uuid.uuid4(), uuid.uuid4()]
         with Session(self.engine) as db:
             for n, uid in enumerate(self.ids):
@@ -222,3 +223,66 @@ class CompanionTests(unittest.TestCase):
         self.assertEqual(self.client.post("/v1/companion/opening", headers=self.headers(),
                                          json={"message":"fake"}).status_code, 400)
         self.assertEqual(self.chat(opening_message="x"*1201).status_code, 400)
+
+    def test_saved_plans_dates_opt_in_isolation_and_minimization(self):
+        today = date.today()
+        with Session(self.engine) as db:
+            for offset, title in ((-1, "Yesterday private"), (0, "BuildFest"), (1, "Presentation"), (2, "Later private")):
+                db.add(CheckIn(user_id=self.ids[0], date=today+timedelta(days=offset),
+                    calendar_event=title, notes="PRIVATE_HEALTH_NOTE"))
+            db.add(CheckIn(user_id=self.ids[1], date=today, calendar_event="OTHER_USER_PLAN"))
+            db.commit()
+        self.chat()
+        self.assertNotIn("saved_plans", json.loads(self.mock.call_args.kwargs["prompt"])["context"])
+        self.client.post("/v1/companion/opening", headers=self.headers(), json={"include_saved_context": True})
+        prompt = self.mock.call_args.kwargs["prompt"]
+        plans = json.loads(prompt)["context"]["saved_plans"]
+        self.assertEqual([(x["date"], x["title"]) for x in plans["items"]],
+            [(str(today), "BuildFest"), (str(today+timedelta(days=1)), "Presentation")])
+        for excluded in ("Yesterday private", "Later private", "OTHER_USER_PLAN", "PRIVATE_HEALTH_NOTE"):
+            self.assertNotIn(excluded, prompt)
+        self.assertIn("timezone unknown", plans["date_basis"])
+
+    def test_plan_changes_invalidate_history_and_inflight_reply(self):
+        with Session(self.engine) as db:
+            db.add(CheckIn(user_id=self.ids[0], date=date.today(), calendar_event="BuildFest"))
+            db.commit()
+        first = self.chat(include_saved_context=True).json()
+        with Session(self.engine) as db:
+            row = db.scalar(select(CheckIn).where(CheckIn.user_id == self.ids[0]))
+            row.calendar_event = "Revised plan"
+            db.commit()
+        result = self.chat(include_saved_context=True, context_token=first["context_token"],
+            history=[{"role":"user","content":"BuildFest"},{"role":"assistant","content":"Good luck"}]).json()
+        self.assertFalse(result["history_accepted"])
+        async def delete_plan(**kwargs):
+            with Session(self.engine) as db:
+                row = db.scalar(select(CheckIn).where(CheckIn.user_id == self.ids[0]))
+                row.calendar_event = None
+                row.calendar_events = []
+                db.commit()
+            return ({"message":"Revised plan"}, "gemini", [])
+        self.mock.side_effect = delete_plan
+        self.assertEqual(self.chat(include_saved_context=True).json()["generation_status"], "context_changed")
+        self.mock.side_effect = None
+        self.chat(include_saved_context=True)
+        self.assertEqual(json.loads(self.mock.call_args.kwargs["prompt"])["context"]["saved_plans"]["items"], [])
+
+    def test_structured_plan_bounds_and_explicit_dates(self):
+        today = date.today()
+        with Session(self.engine) as db:
+            db.add(CheckIn(user_id=self.ids[0], date=today, calendar_events=[
+                {"date":str(today), "title":"x"*300, "location":"PRIVATE_LOCATION"},
+                {"date":str(today+timedelta(days=1)), "title":"Wrong day"},
+                {"start":str(today)+"T23:00:00Z", "title":"Unknown local date"},
+                {"all_day":True, "start":str(today), "title":"All day"},
+                *[{"date":str(today),"title":str(n)} for n in range(20)]]))
+            db.commit()
+        self.chat(include_saved_context=True)
+        prompt = self.mock.call_args.kwargs["prompt"]
+        items = json.loads(prompt)["context"]["saved_plans"]["items"]
+        self.assertEqual(len(items), 3)
+        self.assertEqual(len(items[0]["title"]), 200)
+        self.assertEqual(items[1]["title"], "All day")
+        for excluded in ("PRIVATE_LOCATION", "Wrong day", "Unknown local date"):
+            self.assertNotIn(excluded, prompt)
