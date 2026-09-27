@@ -12,6 +12,7 @@ function FormModal({
     buttonSuccess="",
     shake=false,
     showSubmit=true,
+    pending=false,
     color="dark"
 }) {
 
@@ -25,7 +26,7 @@ function FormModal({
             >
             {
                 // x button will be placed in top-right corner absolutely (without affecting placement of other items)
-                <CancelButton className={`${buttonClass} p-2 absolute-top-right`} onClick={onHide} />
+                <CancelButton className={`${buttonClass} p-2 absolute-top-right`} onClick={pending ? undefined : onHide} />
             }
                 <Row>
                     <Col className="form-modal-header">
@@ -42,7 +43,7 @@ function FormModal({
 
                 {showSubmit && (
                     <Row className="vertical-16 form-modal-footer flex-shrink-0">
-                        <p className="error-text-light at-middle-center">
+                        <p role="alert" className="error-text-light at-middle-center">
                             {buttonError}
                         </p>
                         <p className="at-middle-center">
@@ -53,6 +54,7 @@ function FormModal({
                                 shake ? "shake" : ""
                             }`}
                             onClick={onSubmit}
+                            disabled={pending}
                         >
                             {submitText}
                         </Button>

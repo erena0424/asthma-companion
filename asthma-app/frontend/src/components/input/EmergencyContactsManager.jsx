@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "react-bootstrap";
 import ContactCard from "./ContactCard";
 import ContactModal from "./ContactModal";
@@ -10,18 +10,27 @@ function EmergencyContactsManager({
   emptyMessage = "No emergency contacts.",
   editable = true,
   compact = false,
+  savedMessage = "",
 }) {
 
+  const busy = useRef(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
 
   function openAddModal() {
     setEditingContact(null);
+    setError("");
+    setSaved(false);
     setShowModal(true);
   }
 
   function openEditModal(contact) {
     setEditingContact(contact);
+    setError("");
+    setSaved(false);
     setShowModal(true);
   }
 
@@ -30,7 +39,22 @@ function EmergencyContactsManager({
     setShowModal(false);
   }
 
-  function saveContact(contact) {
+  async function persist(contacts) {
+    if (busy.current) throw new Error("A contact save is already in progress.");
+    busy.current = true;
+    setPending(true);
+    setError("");
+    setSaved(false);
+    try {
+      await onChange(contacts);
+      setSaved(true);
+    } finally {
+      busy.current = false;
+      setPending(false);
+    }
+  }
+
+  async function saveContact(contact) {
     let updatedContacts;
 
     if (editingContact) {
@@ -53,18 +77,22 @@ function EmergencyContactsManager({
       ];
     }
 
-    onChange(updatedContacts);
-    closeModal();
+    await persist(updatedContacts);
   }
 
-  function removeContact(id) {
-    onChange(
-      contacts.filter(contact => contact.id !== id)
-    );
+  async function removeContact(id) {
+    try {
+      await persist(contacts.filter(contact => contact.id !== id));
+    } catch (error) {
+      setError(error.message || "Unable to remove contact. Your changes are not saved.");
+    }
   }
 
   return (
-    <div className="vertical-16 at-middle-center vertical-fill">
+    <div className="vertical-16 at-middle-center vertical-fill" aria-busy={pending}>
+        {error && <p role="alert">{error}</p>}
+        <p role="status">{pending ? "Saving contacts..." : saved ? savedMessage : ""}</p>
+        <fieldset disabled={pending} style={{ border: 0, width: "100%" }}>
         <div
             className={`vertical-16 w-100 text-center ${
               contacts.length > 0 ? "scrollable" : ""
@@ -105,6 +133,7 @@ function EmergencyContactsManager({
             </Button>
         )}
 
+        </fieldset>
         <ContactModal
             show={showModal}
             onHide={closeModal}

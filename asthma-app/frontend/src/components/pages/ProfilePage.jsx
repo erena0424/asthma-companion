@@ -99,7 +99,7 @@ function EditIcon() {
 }
 
 function ProfilePage() {
-  const { token, user, refreshUserProfile } = useAuth();
+  const { token, user, refreshUserProfile, updateUser } = useAuth();
   const fileInputRef = useRef(null);
 
   const [pageStatus, setPageStatus] = useState("success");
@@ -111,6 +111,10 @@ function ProfilePage() {
     name: "",
     date_of_birth: "",
   });
+
+  const [supportDraft, setSupportDraft] = useState({ care_goal: "", accessibility_needs: "" });
+  const [supportStatus, setSupportStatus] = useState("");
+  const supportSaving = useRef(false);
 
   const [listDraft, setListDraft] = useState([]);
   const [newListItem, setNewListItem] = useState("");
@@ -308,24 +312,36 @@ function ProfilePage() {
   }
 
   async function updateEmergencyContacts(contacts) {
+    setSaving(true);
     try {
-      setSaving(true);
-      setActionError("");
-
-      await updateProfile({
-        token,
-        updates: {
-          emergency_contacts: contacts,
-        },
-      });
-
-      await refreshUserProfile();
-    } catch (error) {
-      setActionError(
-        error.message ||
-        "Unable to update your emergency contacts."
-      );
+      const profile = await updateProfile({ token, updates: { emergency_contacts: contacts } });
+      updateUser(profile);
     } finally {
+      setSaving(false);
+    }
+  }
+
+  function openSupportEditor() {
+    setSupportDraft({ care_goal: user?.care_goal ?? "", accessibility_needs: user?.accessibility_needs ?? "" });
+    setActionError("");
+    setSupportStatus("");
+    setActiveEditor("support");
+  }
+
+  async function saveSupport() {
+    if (supportSaving.current) return;
+    supportSaving.current = true;
+    setSaving(true);
+    setActionError("");
+    try {
+      const profile = await updateProfile({ token, updates: supportDraft });
+      updateUser(profile);
+      setSupportStatus("Personal support information saved.");
+      setActiveEditor(null);
+    } catch (error) {
+      setActionError(error.message || "Unable to save personal support information.");
+    } finally {
+      supportSaving.current = false;
       setSaving(false);
     }
   }
@@ -495,6 +511,17 @@ function ProfilePage() {
           type="contacts"
       />
 
+      <Card className="green-theme border-contrast p-4">
+        <h2>Personal support information</h2>
+        <p>Your own care goal and accessibility needs. Leave a field empty to clear it.</p>
+        <h3>Care goal</h3>
+        <p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{user?.care_goal || "No care goal saved."}</p>
+        <h3>Accessibility needs</h3>
+        <p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{user?.accessibility_needs || "No accessibility needs saved."}</p>
+        <Button className="button-dark" onClick={openSupportEditor}>Edit personal support information</Button>
+        <p role="status">{supportStatus}</p>
+      </Card>
+
       {activeEditor && (
         <div
           className="profile-modal-backdrop"
@@ -518,6 +545,26 @@ function ProfilePage() {
             >
               ×
             </button>
+
+            {activeEditor === "support" && (
+              <>
+                <h2 id="profile-editor-title">Personal support information</h2>
+                <fieldset disabled={saving} style={{ border: 0 }}>
+                  {[["care_goal", "Care goal"], ["accessibility_needs", "Accessibility needs"]].map(([field, label]) => (
+                    <label className="profile-field" key={field}>
+                      <span>{label}</span>
+                      <textarea rows={4} maxLength={1000} value={supportDraft[field]}
+                        onChange={event => setSupportDraft(current => ({ ...current, [field]: event.target.value }))} />
+                      <small>{supportDraft[field].length}/1000 characters</small>
+                    </label>
+                  ))}
+                  <EditorError message={actionError} />
+                  <button className="profile-save-button" onClick={saveSupport} disabled={saving}>
+                    {saving ? "Saving..." : "Save Changes"}
+                  </button>
+                </fieldset>
+              </>
+            )}
 
             {activeEditor === "profile" && (
               <>
@@ -650,6 +697,7 @@ function ProfilePage() {
                         contacts={emergencyContacts}
                         onChange={updateEmergencyContacts}
                         compact={true}
+                        savedMessage="Contacts saved."
                     />
 
                     <EditorError message={actionError} />
@@ -768,7 +816,7 @@ function ProfileListCard({
 function EditorError({ message }) {
   if (!message) return null;
 
-  return <p className="profile-error">{message}</p>;
+  return <p role="alert" className="profile-error">{message}</p>;
 }
 
 export default ProfilePage;

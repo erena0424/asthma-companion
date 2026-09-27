@@ -39,3 +39,30 @@ clinical safety or provider integrations. No live DB/provider is contacted.
 Verification completed: six isolated tests passed. Offline PostgreSQL Alembic
 SQL generation from d1e2f3a4b5c6 to e2f3a4b5c6d7 also passed, producing only
 the nullable JSONB column addition and revision update. No live DDL was executed.
+
+## Checkpoint 1 frontend checks
+
+Profile now edits contacts, care goals and accessibility needs through the existing
+API. Summary controls, character/check-in flow and help route are later work.
+
+From asthma-app/frontend with Node and existing dependencies installed:
+
+```sh
+npm test
+npm install --prefix /tmp/lobelia-ui-test-tools --no-audit --no-fund --ignore-scripts jsdom@26
+JSDOM_MODULE=/tmp/lobelia-ui-test-tools/node_modules/jsdom/lib/api.js node --test tests/profileSupport.test.mjs
+npm run build -- --outDir /tmp/lobelia-profile-support-build
+```
+
+The DOM dependency is temporary; application dependencies and the existing lockfile
+are unchanged. Vite loads real components without environment files; fetch is
+mocked and no API/database/provider is contacted. Five DOM tests and 17 existing
+helper tests passed; the build passed with a bundle-size warning. DOM checks cover
+pending/rejected contact saves, retry, add/delete/clear, personal text edits and
+canonical GET after remount. They do not validate browser layout, focus behavior,
+real authentication or database persistence.
+
+For live verification, sign in with a fictitious account, edit a contact and both
+personal fields, reload, then correct/clear and reload again. Temporarily block
+PATCH in browser developer tools to verify the draft stays visible on failure
+and retry works. No real call/message action belongs to this checkpoint.
