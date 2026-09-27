@@ -16,7 +16,7 @@ from sqlalchemy import select
 from copilot.llm import LLMRegistry
 from db.models import Forecast
 
-PERSONA_VERSION = "companion-v2"
+PERSONA_VERSION = "companion-v3"
 _HISTORY_KEY = secrets.token_bytes(32)
 SYSTEM_PROMPT = """You are a warm, calm, encouraging asthma companion.
 Speak naturally in 2–4 short sentences. Acknowledge feelings without forced positivity,
@@ -41,6 +41,16 @@ PERSONA_TONES = {
     "calm": "Use a quiet, steady tone with short sentences and minimal enthusiasm.",
     "direct": "Use a kind, straightforward tone; answer briefly without extra encouragement.",
 }
+OPENING_PROMPT = """
+Open the conversation in 2–3 short, friendly sentences, without pretending the user
+has sent a message. Briefly mention one useful fact from the supplied stored forecast
+and its target date in natural language, preserving uncertainty and stale/future status.
+Do not quote article titles, append technical status labels, give medical instructions,
+or infer environmental readings from risk alone. Invite the user to share their plans
+or what is on their mind. If no forecast is available, simply greet them naturally;
+do not invent a forecast or announce missing system data.
+"""
+OPENING_FALLBACK = "Hello! What's on your mind today?"
 FALLBACK = "I'm having trouble replying right now. You can try again shortly."
 
 
@@ -90,7 +100,7 @@ def stored_forecast(db, user_id, today):
     }}
 
 
-async def reply(db, user, message, *, include_saved_context=False, persona="warm", registry=None, history=None, context_token=None):
+async def reply(db, user, message, *, include_saved_context=False, persona="warm", registry=None, history=None, context_token=None, opening=False, opening_message=None):
     today = date.today()
     forecast = stored_forecast(db, user.id, today)
     context = {"as_of_date": today.isoformat(), "forecast": forecast}
@@ -116,18 +126,20 @@ async def reply(db, user, message, *, include_saved_context=False, persona="warm
         hashlib.sha256).hexdigest()
     history_accepted = bool(context_token and hmac.compare_digest(context_token.encode(), revision.encode()))
     prompt = json.dumps({"message": message, "context": context,
-        "recent_history": (history or []) if history_accepted else []}, ensure_ascii=False)
+        "recent_history": (history or []) if history_accepted else [],
+        "opening_message": opening_message if history_accepted else None,
+        "task": "opening" if opening else "reply"}, ensure_ascii=False)
     status = "generated"
     try:
         result, _, _ = await asyncio.wait_for(
             (registry or SelectedProviderRegistry()).generate(
-                system_prompt=SYSTEM_PROMPT + "\n" + PERSONA_TONES[persona], prompt=prompt,
+                system_prompt=SYSTEM_PROMPT + "\n" + PERSONA_TONES[persona] + (OPENING_PROMPT if opening else ""), prompt=prompt,
                 validator=lambda value: CompanionReply.model_validate(value).model_dump()),
             timeout=20,
         )
         output = CompanionReply.model_validate(result).message
     except Exception:
-        output, status = FALLBACK, "fallback"
+        output, status = OPENING_FALLBACK if opening else FALLBACK, "fallback"
     if include_saved_context:
         # End the read transaction so a correction committed during generation
         # becomes visible even with a repeatable-read database isolation level.
@@ -142,7 +154,7 @@ async def reply(db, user, message, *, include_saved_context=False, persona="warm
             current["approved_summary"] = {key: user.support_memory.get(key)
                 for key in ("text", "check_in_date", "saved_at", "source")}
         if json.dumps(current, sort_keys=True) != selected_context:
-            output, status = FALLBACK, "context_changed"
+            output, status = OPENING_FALLBACK if opening else FALLBACK, "context_changed"
             sources = [source for source in sources if source == "stored_forecast"]
     return {"message": output, "generation_status": status, "forecast": forecast,
             "context_sources": sources, "context_token": revision if status == "generated" else None,

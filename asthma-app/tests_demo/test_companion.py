@@ -189,3 +189,36 @@ class CompanionTests(unittest.TestCase):
         self.assertEqual(prompt['recent_history'],[])
         self.assertEqual(prompt['message'],'Busy day today')
         self.assertFalse(self.chat(history=pair,context_token='é').json()['history_accepted'])
+
+    def test_opening_forecast_context_and_followup(self):
+        today = date.today()
+        with Session(self.engine) as db:
+            db.add(Forecast(user_id=self.ids[0], date=today,
+                            forecast_for=today+timedelta(days=1), risk_level="Moderate",
+                            contributing_factors=["Stored pollen"]))
+            db.commit()
+        result = self.client.post("/v1/companion/opening", headers=self.headers(),
+                                  json={"persona":"calm"}).json()
+        prompt = json.loads(self.mock.call_args.kwargs["prompt"])
+        self.assertIsNone(prompt["message"])
+        self.assertEqual(prompt["task"], "opening")
+        self.assertEqual(prompt["context"]["forecast"]["status"], "future")
+        self.assertEqual(result["persona"], "calm")
+        self.assertIn("2–3", self.mock.call_args.kwargs["system_prompt"])
+        self.chat(opening_message=result["message"], context_token=result["context_token"])
+        self.assertEqual(json.loads(self.mock.call_args.kwargs["prompt"])["opening_message"], result["message"])
+        self.chat(1, opening_message=result["message"], context_token=result["context_token"])
+        self.assertIsNone(json.loads(self.mock.call_args.kwargs["prompt"])["opening_message"])
+
+    def test_opening_missing_forecast_fallback_and_validation(self):
+        response = self.client.post("/v1/companion/opening", headers=self.headers(), json={})
+        self.assertEqual(response.json()["forecast"]["status"], "unavailable")
+        self.mock.side_effect = TimeoutError()
+        result = self.client.post("/v1/companion/opening", headers=self.headers(), json={}).json()
+        self.assertEqual(result["generation_status"], "fallback")
+        self.assertEqual(result["message"], "Hello! What's on your mind today?")
+        self.assertIsNone(result["context_token"])
+        self.assertEqual(self.client.post("/v1/companion/opening", json={}).status_code, 401)
+        self.assertEqual(self.client.post("/v1/companion/opening", headers=self.headers(),
+                                         json={"message":"fake"}).status_code, 400)
+        self.assertEqual(self.chat(opening_message="x"*1201).status_code, 400)

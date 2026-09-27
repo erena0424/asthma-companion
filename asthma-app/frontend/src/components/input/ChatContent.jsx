@@ -8,8 +8,10 @@ function ChatContent() {
         messages,
         isSending,
         sendMessage,
-        clearChat, persona, setPersona, includeSavedContext, setIncludeSavedContext
+        openConversation, openingFailed, clearChat, persona, setPersona, includeSavedContext, setIncludeSavedContext
     } = useChat();
+
+    useEffect(() => { openConversation(); }, [openConversation]);
 
     const [input, setInput] = useState("");
     const messagesEndRef = useRef(null);
@@ -77,6 +79,8 @@ function ChatContent() {
 
                 <div ref={messagesEndRef} />
             </div>
+
+            {openingFailed && <Button disabled={isSending} onClick={() => openConversation(true)}>Try greeting again</Button>}
 
             <div className="chatbot-input">
                 <div

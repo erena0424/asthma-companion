@@ -28,7 +28,7 @@ See `asthma-app/docs/API.md` for exact requests, responses and integration notic
 
 Backend files: `asthma-app/api/companion.py`, `services/companion_service.py`
 (under asthma-app), registration in `asthma-app/api/main.py`, and isolated
-`asthma-app/tests_demo/test_companion.py`. Seven companion tests plus six existing
+`asthma-app/tests_demo/test_companion.py`. Eleven companion tests plus six existing
 support tests pass with fake providers and disposable SQLite. This verifies
 scoping, opt-in/correction/deletion, dates, no writes, validation and fallbacks;
 it does not verify real model quality, clinical safety, live Postgres/provider
@@ -36,7 +36,7 @@ availability, browser integration or end-to-end demo operation.
 
 The chat sends up to four recent successful exchanges (8 alternating user/assistant
 messages, 1200 characters each, 6000 total), kept only in React memory. No full chat
-is saved to the database or browser storage. Greeting, errors, fallback replies and
+is saved to the database or browser storage. Static greetings, errors, fallback replies and
 unanswered messages are excluded. Clear Chat, account changes and saved-context
 opt-in changes reset eligible history; late replies are discarded. An opaque
 per-process context token binds history to the current authenticated user, opt-in,
@@ -50,13 +50,36 @@ model includes dates/uncertainty when relevant. This is bounded conversational
 continuity, not durable automatic memory. Saved approved summaries remain the
 separate optional cross-visit feature.
 
-Verification: 15 isolated backend tests, 6 mounted chat tests and 17 existing
+Verification: 17 isolated backend tests, 9 mounted chat tests and 17 existing
 frontend tests; production build to /tmp. Mocked providers/disposable SQLite only;
 no live provider, Postgres or browser verification. Mounted tests run via
 `JSDOM_MODULE=/tmp/lobelia-ui-test-tools/node_modules/jsdom/lib/api.js node --test tests/companionChat.test.mjs`.
 Peyton's supplied asset and real runtime rehearsal remain outstanding. Test a
 fictitious approved summary across sessions, then correct/delete and repeat.
 PR16 remains separate; its Profile changes are not included here.
+
+
+## Forecast-led opening for the video demo
+
+Opening the visible floating chat or full chat page calls authenticated
+`POST /v1/companion/opening` once per in-memory conversation, using the selected
+tone and current saved-context opt-in. A hidden/collapsed chat makes no opening
+request. Navigation/re-render does not generate another greeting. Clear Chat
+cancels pending output and leaves a neutral greeting; it does not immediately
+call the model again. Account changes reset this state. A failed opening shows
+a natural greeting with an explicit retry button; there is no automatic retry loop.
+
+The existing companion provider receives current cached forecast facts and
+instructions for 2–3 conversational sentences, retaining relevant dates and
+uncertainty without article titles or technical status boilerplate. No forecast
+calculation or advice-page behavior changes. Missing forecast can yield a simple
+greeting. Output quality still needs a live model/demo rehearsal.
+
+A successfully generated opening is held separately in React memory and sent as
+bounded, untrusted `opening_message` background on follow-ups, with the same
+context token checks as recent exchanges. It is not a user-authored message,
+approved memory or saved transcript. Clear/account/opt-in changes remove it;
+a rejected context revision or fallback also removes it from subsequent requests.
 
 
 ## Authorized continuity extension (current implementation contract)

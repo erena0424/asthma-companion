@@ -32,6 +32,7 @@ class CompanionRequest(BaseModel):
     include_saved_context: StrictBool = False
     persona: Literal["warm", "calm", "direct"] = "warm"
 
+    opening_message: str | None = Field(default=None, max_length=1200)
     history: list[HistoryMessage] = Field(default_factory=list, max_length=8)
     context_token: str | None = Field(default=None, max_length=64)
 
@@ -58,4 +59,19 @@ async def companion_chat(body: CompanionRequest,
                          db: Session = Depends(get_db)):
     return await reply(db, user, body.message,
                        include_saved_context=body.include_saved_context, persona=body.persona,
-                       history=[item.model_dump() for item in body.history], context_token=body.context_token)
+                       history=[item.model_dump() for item in body.history], context_token=body.context_token,
+                       opening_message=body.opening_message)
+
+
+class OpeningRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    include_saved_context: StrictBool = False
+    persona: Literal["warm", "calm", "direct"] = "warm"
+
+
+@router.post("/opening")
+async def companion_opening(body: OpeningRequest,
+                            user: User = Depends(get_current_user),
+                            db: Session = Depends(get_db)):
+    return await reply(db, user, None, opening=True,
+                       include_saved_context=body.include_saved_context, persona=body.persona)

@@ -859,7 +859,7 @@ frontend may offer retry. Already-sent provider input cannot be retracted. Backe
 checks immediately before return; it cannot recall a reply already delivered.
 The chat sends up to four recent successful exchanges (8 alternating user/assistant
 messages, 1200 characters each, 6000 total), kept only in React memory. No full chat
-is saved to the database or browser storage. Greeting, errors, fallback replies and
+is saved to the database or browser storage. Static greetings, errors, fallback replies and
 unanswered messages are excluded. Clear Chat, account changes and saved-context
 opt-in changes reset eligible history; late replies are discarded. An opaque
 per-process context token binds history to the current authenticated user, opt-in,
@@ -886,3 +886,41 @@ is authentic; authenticated clients control their own submitted text.
 
 Date relevance follows existing server-local `date.today()` convention; it may
 differ from a user's timezone. The persona/version are informational, not storage.
+
+## Forecast-led opening for the video demo
+
+Opening the visible floating chat or full chat page calls authenticated
+`POST /v1/companion/opening` once per in-memory conversation, using the selected
+tone and current saved-context opt-in. A hidden/collapsed chat makes no opening
+request. Navigation/re-render does not generate another greeting. Clear Chat
+cancels pending output and leaves a neutral greeting; it does not immediately
+call the model again. Account changes reset this state. A failed opening shows
+a natural greeting with an explicit retry button; there is no automatic retry loop.
+
+The existing companion provider receives current cached forecast facts and
+instructions for 2–3 conversational sentences, retaining relevant dates and
+uncertainty without article titles or technical status boilerplate. No forecast
+calculation or advice-page behavior changes. Missing forecast can yield a simple
+greeting. Output quality still needs a live model/demo rehearsal.
+
+A successfully generated opening is held separately in React memory and sent as
+bounded, untrusted `opening_message` background on follow-ups, with the same
+context token checks as recent exchanges. It is not a user-authored message,
+approved memory or saved transcript. Clear/account/opt-in changes remove it;
+a rejected context revision or fallback also removes it from subsequent requests.
+
+Opening request body: `{"persona":"warm","include_saved_context":false}`.
+Both fields are optional with these defaults. No message/history/user ID is
+accepted; extra fields and invalid tone/boolean return the existing 400 validation
+response. Authentication/errors match `/chat`. Response has the same fields as
+`/chat`: `message`, `generation_status`, `forecast`, `context_sources`,
+`context_token`, `history_accepted`, `persona_version`, `persona`.
+On provider/schema failure, `generation_status: "fallback"`, null context token
+and predefined `Hello! What's on your mind today?` are returned.
+Saved-context changes during generation return `context_changed` with that same
+neutral greeting. Neither failure means a forecast was generated or refreshed.
+
+`POST /chat` additionally accepts nullable `opening_message` (default null,
+maximum 1200 characters). It is passed to the model only with a valid current
+`context_token`; otherwise it is discarded with history. It never becomes a
+system instruction. No additional database writes or provider are introduced.
