@@ -24,15 +24,17 @@ Contact actions open the device’s phone handler where supported; the number al
 
 ## How the AI Companion Works
 
-The backend assembles relevant context, sends it to the configured LLM, and validates the structured reply before returning a short conversational message to the frontend.
+Meet Your AI Companion
 
-- **Model providers:** Google Gemini or Anthropic Claude, selected through `LLM_PROVIDER`.
-- **Personal context:** Saved profile information, upcoming saved calendar plans, and an explicitly approved check-in summary can inform the conversation when saved context is enabled.
-- **Forecast context:** The companion can reference an existing stored forecast with its date and uncertainty; it does not generate or recalculate the forecast itself.
-- **Conversation continuity:** A bounded recent conversation history supports follow-up replies. Chatting does not automatically save a new long-term summary.
-- **Fallback behavior:** If generation fails or times out, the service returns a simple fallback message.
+A friendly place to talk about your day, share what is on your mind, and discuss your saved asthma forecast in everyday language.
 
-The LLM is prompted to provide supportive conversation without diagnosis, urgency classification, or medication instructions. Saved contacts remain available through the separate support flow.
+- **Start with a personal greeting.** When you open the chat, your companion can bring up an upcoming saved plan or a dated forecast and invite you into the conversation. You can start chatting even if you have no saved plans or forecast.
+- **Talk about everyday life.** Share a busy class schedule, an upcoming activity, or how you are feeling. The companion is designed to acknowledge what you say and offer brief, relevant encouragement.
+- **Ask about your forecast.** Discuss the risk level and contributing factors in your latest saved forecast, with the forecast date kept clear. The companion explains the existing prediction; it does not assess your current symptoms.
+- **Get replies that take your background into account.** Saved care goals, accessibility needs, known triggers, environment preferences, and an approved check-in summary can help make the conversation more relevant to you.
+- **Continue the conversation naturally.** Ask a follow-up without repeating your previous message. The companion uses recent exchanges from the current chat, while a saved, approved summary can provide background in a later session.
+- **Choose how it speaks to you.** Select **Warm** for friendly encouragement, **Calm** for a quieter tone, or **Direct** for concise replies. Use **Clear Chat** to start a fresh conversation, then request a new daily greeting.
+
 
 ## Project Structure
 
