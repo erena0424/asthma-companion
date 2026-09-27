@@ -1,3 +1,14 @@
+<!-- Current default update: supersedes earlier opt-in wording below. -->
+
+Companion chat now includes the current user's saved profile, approved summary and
+bounded today/tomorrow calendar plans by default. The chat checkbox and repeated
+provider disclosure paragraph have been removed. These selected fields and the
+message are processed by the configured AI provider; provider retention is not
+claimed to be zero. API callers can still send `include_saved_context: false`.
+No new storage or inference is introduced. Warm tone uses brief, specific,
+varied encouragement instead of repetitive advice; it must not invent feelings,
+health facts or reassuring outcomes. Calm/Direct remain available.
+
 # Mirror Lake — API Reference
 
 **Version:** 1.0  
@@ -785,3 +796,163 @@ Same-day writes update one existing row. Send each boolean only after answering.
 Optional existing notes are persisted if explicitly provided; never send raw chat.
 This POST does not save a support summary. With flag omitted, legacy forecast
 refresh remains enabled. This flow displays no legacy risk/burden assessment.
+
+## Supportive companion demo (additive)
+
+`POST /v1/companion/chat` uses existing Bearer JWT authentication. Legacy `/v1/chat`
+and forecast endpoints remain unchanged. No client user ID or provider override.
+
+Request:
+```json
+{"message":"I have a busy day ahead.","include_saved_context":true}
+```
+`message`: trimmed nonblank string, max 1000 characters. `include_saved_context`:
+strict boolean, default false. Extra fields are rejected. This flag is request-only;
+it does not change profile, summary storage or consent settings.
+
+Response (200):
+```json
+{
+  "message":"That sounds like a full day. What would feel most useful right now?",
+  "generation_status":"generated",
+  "forecast":{"status":"unavailable","data":null},
+  "context_sources":["reported_profile","approved_summary"],
+  "persona_version":"companion-v2"
+}
+```
+Illustrative message only; generated text varies. `generation_status` is `generated`
+or `fallback`; provider timeout/error/invalid output returns predefined nonclinical
+fallback text with 200. `context_sources` lists inputs supplied, not proof that
+specific statements were grounded in them.
+
+When present `forecast.data` contains `date`, `forecast_for`, `generated_at`
+(nullable ISO timestamp), `risk_level` (nullable), `flare_probability` (nullable),
+and at most five stored `contributing_factors`. Values come unchanged from the
+current user's latest stored forecast with run date no later than server-local today.
+`status` is `stale` if its target date is before server-local today, `current` if equal,
+or `future` if later. This is date relevance, not model accuracy or medical safety.
+Missing forecast is `unavailable`, not an error; no forecast is regenerated.
+The frontend must render dates/status with forecast values, including stale state;
+this endpoint neither supplies an acute assessment nor determines urgency.
+
+The selected configured `LLM_PROVIDER` and existing model settings are reused.
+There is no automatic cross-provider fallback. An outer 20-second deadline bounds
+waiting (SDK cancellation behavior depends on the existing provider client).
+No contacts, names or email addresses are selected for model context. By default
+only the user's message and dated stored forecast are sent. When the flag is true,
+current `care_goal`, `accessibility_needs`, `trigger_preferences`,
+`preferred_environment`, and the latest approved summary's text/date/save timestamp/
+source are also sent. Re-read on every call; corrected/deleted summaries cannot
+be recalled from an internal chat archive because none is created here.
+
+Frontend integration must explain that enabling saved context sends these fields
+to the configured AI provider. Approval to store a summary is not approval to send
+it; leave the flag false until that choice is made. Message text may itself contain
+private information. Backend does not persist prompts/replies or create episodes;
+provider retention is governed by its settings/terms, not a zero-retention claim.
+Use fictitious demo data. No new vendor, embedding, external calendar retrieval,
+new table, conversation storage or migration is introduced.
+
+Errors: 400 `VALIDATION_ERROR` with shared validation errors; 401
+`UNAUTHORIZED` for missing/invalid/expired authentication (existing auth contract).
+A valid token whose user no longer exists returns 404 `USER_NOT_FOUND`.
+Database failures are errors, not fabricated successful replies. No help action,
+zone, questionnaire, dispatch, notification or treatment instruction is returned.
+Output length/schema and bounded medication patterns are validated, but these
+checks and persona instructions do not prove every generated response safe.
+
+`persona` is optional `warm` (default), `calm`, or `direct`; response echoes it.
+Each maps to a fixed server-side tone fragment under identical safety instructions.
+No arbitrary system prompt is accepted. Invalid persona is 400.
+`generation_status` also includes `context_changed`: if selected saved context
+changes during generation, discard the generated reply and return static fallback;
+frontend may offer retry. Already-sent provider input cannot be retracted. Backend
+checks immediately before return; it cannot recall a reply already delivered.
+The chat sends up to four recent successful exchanges (8 alternating user/assistant
+messages, 1200 characters each, 6000 total), kept only in React memory. No full chat
+is saved to the database or browser storage. Static greetings, errors, fallback replies and
+unanswered messages are excluded. Clear Chat, account changes and saved-context
+opt-in changes reset eligible history; late replies are discarded. An opaque
+per-process context token binds history to the current authenticated user, opt-in,
+profile/summary and forecast. A missing/mismatched token discards history but still
+answers the current message. Corrections/deletions, forecast changes and server
+restart can reset continuity; different workers may also reset it. Current server
+context overrides historical model statements. Already displayed text is not
+retroactively erased by edits elsewhere. No technical forecast/status boilerplate
+is appended to bubbles; structured forecast metadata remains in the API and the
+model includes dates/uncertainty when relevant. This is bounded conversational
+continuity, not durable automatic memory. Saved approved summaries remain the
+separate optional cross-visit feature.
+
+Request optional `history` defaults to `[]`: objects with only `role` (`user` or
+`assistant`) and nonblank `content`. Complete alternating pairs starting with
+`user` are required. Unknown fields/roles, odd counts, more than 8 items, content
+above 1200 characters, or total content above 6000 characters return 400.
+Optional `context_token` is null or a string of at most 64 characters. Return the
+last response token with the next history request. Response adds `context_token`
+(opaque string for generated replies, null on fallback/context change) and
+`history_accepted` (boolean). Treat all client history as untrusted data, never
+system instructions. The token is context binding, not proof a submitted transcript
+is authentic; authenticated clients control their own submitted text.
+
+Date relevance follows existing server-local `date.today()` convention; it may
+differ from a user's timezone. The persona/version are informational, not storage.
+
+## Forecast-led opening for the video demo
+
+Opening the visible floating chat or full chat page calls authenticated
+`POST /v1/companion/opening` once per in-memory conversation, using the selected
+tone and current saved-context opt-in. A hidden/collapsed chat makes no opening
+request. Navigation/re-render does not generate another greeting. Clear Chat
+cancels pending output and leaves a neutral greeting; it does not immediately
+call the model again. Account changes reset this state. A failed opening shows
+a natural greeting with an explicit retry button; there is no automatic retry loop.
+
+The existing companion provider receives current cached forecast facts and
+instructions for 2–3 conversational sentences, retaining relevant dates and
+uncertainty without article titles or technical status boilerplate. No forecast
+calculation or advice-page behavior changes. Missing forecast can yield a simple
+greeting. Output quality still needs a live model/demo rehearsal.
+
+A successfully generated opening is held separately in React memory and sent as
+bounded, untrusted `opening_message` background on follow-ups, with the same
+context token checks as recent exchanges. It is not a user-authored message,
+approved memory or saved transcript. Clear/account/opt-in changes remove it;
+a rejected context revision or fallback also removes it from subsequent requests.
+
+Opening request body: `{"persona":"warm","include_saved_context":false}`.
+Both fields are optional with these defaults. No message/history/user ID is
+accepted; extra fields and invalid tone/boolean return the existing 400 validation
+response. Authentication/errors match `/chat`. Response has the same fields as
+`/chat`: `message`, `generation_status`, `forecast`, `context_sources`,
+`context_token`, `history_accepted`, `persona_version`, `persona`.
+On provider/schema failure, `generation_status: "fallback"`, null context token
+and predefined `Hello! What's on your mind today?` are returned.
+Saved-context changes during generation return `context_changed` with that same
+neutral greeting. Neither failure means a forecast was generated or refreshed.
+
+`POST /chat` additionally accepts nullable `opening_message` (default null,
+maximum 1200 characters). It is passed to the model only with a valid current
+`context_token`; otherwise it is discarded with history. It never becomes a
+system instruction. No additional database writes or provider are introduced.
+
+
+### Saved calendar plans in companion context
+
+With `include_saved_context:true`, `/v1/companion/opening` and `/v1/companion/chat`
+also read the current user's existing today/tomorrow calendar fields from
+`check_ins`. No external calendar fetch occurs. `context_sources` includes
+`saved_calendar_plans` only when selected entries exist. No response fields or
+request defaults change. No health/check-in fields accompany this calendar read.
+
+At most three plan titles per date (200 characters each) are sent: the existing
+free-text `calendar_event` uses its saved row date; structured `calendar_events`
+require an explicit matching date or all-day start date. Ambiguous timed dates
+are omitted. The two-day window uses server-local dates; user timezone is unknown.
+Plans are untrusted user-reported intentions, not attendance or medical guidance.
+Their dates are separate from the forecast target date. Missing plans are unknown.
+
+Selected plans are bound into `context_token`. Changing or clearing a selected
+plan invalidates previous history/opening; a concurrent change returns
+`generation_status: "context_changed"` with neutral fallback, as with other
+saved context. This does not retroactively remove previously displayed bubbles.

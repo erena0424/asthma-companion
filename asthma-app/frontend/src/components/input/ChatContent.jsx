@@ -8,8 +8,10 @@ function ChatContent() {
         messages,
         isSending,
         sendMessage,
-        clearChat
+        openConversation, openingFailed, canRequestOpening, clearChat, persona, setPersona
     } = useChat();
+
+    useEffect(() => { openConversation(); }, [openConversation]);
 
     const [input, setInput] = useState("");
     const messagesEndRef = useRef(null);
@@ -40,7 +42,17 @@ function ChatContent() {
 
     return (
         <div className="chatbot">
-            <div className="chatbot-conversation">
+            <fieldset style={{ border: 0, padding: 0 }}>
+                <label className="d-block">
+                    Reply tone
+                    <Form.Select value={persona} onChange={e => setPersona(e.target.value)}>
+                        <option value="warm">Warm</option>
+                        <option value="calm">Calm</option>
+                        <option value="direct">Direct</option>
+                    </Form.Select>
+                </label>
+            </fieldset>
+            <div className="chatbot-conversation" role="log" aria-label="Companion conversation">
                 {messages.map((message) => (
                     <div
                         key={message.id}
@@ -58,6 +70,8 @@ function ChatContent() {
                 <div ref={messagesEndRef} />
             </div>
 
+            {(openingFailed || canRequestOpening) && <Button disabled={isSending} onClick={() => openConversation(true)}>{openingFailed ? "Try greeting again" : "Show my daily greeting"}</Button>}
+
             <div className="chatbot-input">
                 <div
                     className="chatbot-input-field card-0 light-theme"
@@ -67,9 +81,11 @@ function ChatContent() {
                         style={{ borderRadius: "4px" }}
                         as="textarea"
                         rows={2}
+                        maxLength={1000}
+                        aria-label="Message to companion"
                         placeholder={
                             isSending
-                                ? "Copilot is thinking..."
+                                ? "Companion is replying..."
                                 : "Type a message..."
                         }
                         value={input}
@@ -79,11 +95,13 @@ function ChatContent() {
                     />
                 </div>
 
+                <fieldset disabled={isSending || !input.trim()} style={{ border: 0, padding: 0 }}>
                 <ArrowButton
                     className="button-light p-2"
                     isSend
                     onClick={handleSend}
                 />
+                </fieldset>
             </div>
 
             <Button
