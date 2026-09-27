@@ -1,132 +1,78 @@
-import {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useState,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
-import {
-    askCopilot,
-    formatCopilotReply,
-} from "../helper-functions/askCopilot";
+import { askCompanion, companionMetadata } from "../helper-functions/askCompanion";
 
 const ChatContext = createContext(null);
-
 const INITIAL_MESSAGE = {
-    id: "initial",
-    sender: "ai",
-    text:
-        "Hello! Ask about today's risk, pollen, or plans. " +
-        "For symptoms and inhaler use, log a check-in so they count toward your prediction.",
+    id: "initial", sender: "ai",
+    text: "Hello! What's on your mind today? Each message gets a separate reply; earlier chat messages aren't sent with it.",
 };
 
 export function ChatProvider({ children }) {
     const { token } = useAuth();
-
     const [messages, setMessages] = useState([INITIAL_MESSAGE]);
     const [isSending, setIsSending] = useState(false);
+    const [persona, setPersona] = useState("warm");
+    const [includeSavedContext, setIncludeSavedContext] = useState(false);
+    const requestVersion = useRef(0);
+    const sending = useRef(false);
+    const currentToken = useRef(token);
+    currentToken.current = token;
 
     const clearChat = useCallback(() => {
+        requestVersion.current += 1;
+        sending.current = false;
+        setIsSending(false);
         setMessages([INITIAL_MESSAGE]);
     }, []);
 
-    const sendMessage = useCallback(
-        async (message) => {
-            const trimmed = message.trim();
+    useEffect(() => {
+        clearChat();
+        setPersona("warm");
+        setIncludeSavedContext(false);
+    }, [token, clearChat]);
 
-            if (!trimmed || isSending) {
-                return;
-            }
-
-            if (!token) {
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        id: Date.now(),
-                        sender: "ai",
-                        text: "Please log in to chat with Copilot.",
-                    },
-                ]);
-                return;
-            }
-
-            const userMessage = {
-                id: Date.now(),
-                sender: "user",
-                text: trimmed,
-            };
-
-            setMessages((prev) => [...prev, userMessage]);
-            setIsSending(true);
-
-            try {
-                const data = await askCopilot({
-                    token,
-                    message: trimmed,
-                });
-
-                const reply = formatCopilotReply(data.advice);
-
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        id: Date.now() + 1,
-                        sender: "ai",
-                        text: reply,
-                    },
-                ]);
-            } catch (error) {
-                let text =
-                    error.message ||
-                    "Unable to reach Copilot right now.";
-
-                if (
-                    error.code === "FORECAST_NOT_FOUND" ||
-                    error.status === 404
-                ) {
-                    text =
-                        "No prediction is available yet. Complete today's " +
-                        "check-in and generate a forecast on Home or Statistics first.";
-                }
-
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        id: Date.now() + 1,
-                        sender: "ai",
-                        text,
-                    },
-                ]);
-            } finally {
+    const sendMessage = useCallback(async (message) => {
+        const trimmed = message.trim();
+        if (!trimmed || sending.current) return;
+        if (!token) {
+            setMessages(prev => [...prev, { id: crypto.randomUUID(), sender: "ai", text: "Please sign in to chat." }]);
+            return;
+        }
+        const version = ++requestVersion.current;
+        sending.current = true;
+        setIsSending(true);
+        setMessages(prev => [...prev, { id: crypto.randomUUID(), sender: "user", text: trimmed }]);
+        const stillCurrent = () => version === requestVersion.current && token === currentToken.current;
+        try {
+            const data = await askCompanion({ token, message: trimmed, persona, includeSavedContext });
+            if (!stillCurrent()) return;
+            setMessages(prev => [...prev, {
+                id: crypto.randomUUID(), sender: "ai", text: data.message,
+                metadata: companionMetadata(data),
+            }]);
+        } catch (error) {
+            if (!stillCurrent()) return;
+            setMessages(prev => [...prev, {
+                id: crypto.randomUUID(), sender: "ai",
+                text: error.status === 401 ? "Your session has expired. Please sign in again." : error.message,
+            }]);
+        } finally {
+            if (stillCurrent()) {
+                sending.current = false;
                 setIsSending(false);
             }
-        },
-        [token, isSending]
-    );
+        }
+    }, [token, persona, includeSavedContext]);
 
-    return (
-        <ChatContext.Provider
-            value={{
-                messages,
-                isSending,
-                sendMessage,
-                clearChat,
-            }}
-        >
-            {children}
-        </ChatContext.Provider>
-    );
+    return <ChatContext.Provider value={{ messages, isSending, sendMessage, clearChat,
+        persona, setPersona, includeSavedContext, setIncludeSavedContext }}>
+        {children}
+    </ChatContext.Provider>;
 }
 
 export function useChat() {
     const context = useContext(ChatContext);
-
-    if (!context) {
-        throw new Error(
-            "useChat must be used inside a ChatProvider"
-        );
-    }
-
+    if (!context) throw new Error("useChat must be used inside a ChatProvider");
     return context;
 }

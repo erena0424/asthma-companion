@@ -8,7 +8,7 @@ function ChatContent() {
         messages,
         isSending,
         sendMessage,
-        clearChat
+        clearChat, persona, setPersona, includeSavedContext, setIncludeSavedContext
     } = useChat();
 
     const [input, setInput] = useState("");
@@ -40,7 +40,27 @@ function ChatContent() {
 
     return (
         <div className="chatbot">
-            <div className="chatbot-conversation">
+            <fieldset disabled={isSending} style={{ border: 0, padding: 0 }}>
+                <label className="d-block">
+                    Reply tone
+                    <Form.Select value={persona} onChange={e => setPersona(e.target.value)}>
+                        <option value="warm">Warm</option>
+                        <option value="calm">Calm</option>
+                        <option value="direct">Direct</option>
+                    </Form.Select>
+                </label>
+                <label className="d-block mt-2">
+                    <input type="checkbox" checked={includeSavedContext}
+                        onChange={e => setIncludeSavedContext(e.target.checked)} />{" "}
+                    Include my saved context
+                </label>
+                <small className="d-block">
+                    When checked, your care goal, accessibility needs, saved triggers,
+                    environment preference and approved summary are sent to the AI provider.
+                    A stored forecast may be included either way.
+                </small>
+            </fieldset>
+            <div className="chatbot-conversation" role="log" aria-label="Companion conversation">
                 {messages.map((message) => (
                     <div
                         key={message.id}
@@ -51,6 +71,7 @@ function ChatContent() {
                             style={{ whiteSpace: "pre-wrap" }}
                         >
                             {message.text}
+                            {message.metadata && <small className="d-block mt-2">{message.metadata}</small>}
                         </div>
                     </div>
                 ))}
@@ -67,9 +88,11 @@ function ChatContent() {
                         style={{ borderRadius: "4px" }}
                         as="textarea"
                         rows={2}
+                        maxLength={1000}
+                        aria-label="Message to companion"
                         placeholder={
                             isSending
-                                ? "Copilot is thinking..."
+                                ? "Companion is replying..."
                                 : "Type a message..."
                         }
                         value={input}
@@ -79,11 +102,13 @@ function ChatContent() {
                     />
                 </div>
 
+                <fieldset disabled={isSending || !input.trim()} style={{ border: 0, padding: 0 }}>
                 <ArrowButton
                     className="button-light p-2"
                     isSend
                     onClick={handleSend}
                 />
+                </fieldset>
             </div>
 
             <Button

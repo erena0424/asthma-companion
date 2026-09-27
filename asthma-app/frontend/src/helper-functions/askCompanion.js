@@ -1,0 +1,33 @@
+import { API_URL } from "../config.js";
+
+// Single-turn chat. No conversation history or local profile content is sent.
+export async function askCompanion({ token, message, persona = "warm", includeSavedContext = false }) {
+  const response = await fetch(`${API_URL}/v1/companion/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ message, persona, include_saved_context: includeSavedContext }),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error = new Error(typeof data?.detail === "string" ? data.detail : "Unable to reach the companion. Please try again.");
+    error.status = response.status;
+    throw error;
+  }
+  if (typeof data?.message !== "string" || !data.message.trim()) {
+    throw new Error("The companion returned an empty reply. Please try again.");
+  }
+  return data;
+}
+
+export function companionMetadata(data) {
+  const notes = [];
+  if (data.generation_status === "fallback") notes.push("Reply unavailable; showing a predefined message.");
+  if (data.generation_status === "context_changed") notes.push("Saved context changed during this reply. Please try again.");
+  const forecast = data.forecast;
+  if (forecast?.status === "unavailable") notes.push("No stored forecast available.");
+  else if (forecast?.data?.forecast_for) {
+    const label = { current: "Current", stale: "Older", future: "Future" }[forecast.status] || "Stored";
+    notes.push(`${label} stored forecast for ${forecast.data.forecast_for}.`);
+  }
+  return notes.join(" ");
+}

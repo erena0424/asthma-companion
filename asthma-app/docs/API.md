@@ -785,3 +785,79 @@ Same-day writes update one existing row. Send each boolean only after answering.
 Optional existing notes are persisted if explicitly provided; never send raw chat.
 This POST does not save a support summary. With flag omitted, legacy forecast
 refresh remains enabled. This flow displays no legacy risk/burden assessment.
+
+## Supportive companion demo (additive)
+
+`POST /v1/companion/chat` uses existing Bearer JWT authentication. Legacy `/v1/chat`
+and forecast endpoints remain unchanged. No client user ID or provider override.
+
+Request:
+```json
+{"message":"I have a busy day ahead.","include_saved_context":true}
+```
+`message`: trimmed nonblank string, max 1000 characters. `include_saved_context`:
+strict boolean, default false. Extra fields are rejected. This flag is request-only;
+it does not change profile, summary storage or consent settings.
+
+Response (200):
+```json
+{
+  "message":"That sounds like a full day. What would feel most useful right now?",
+  "generation_status":"generated",
+  "forecast":{"status":"unavailable","data":null},
+  "context_sources":["reported_profile","approved_summary"],
+  "persona_version":"companion-v1"
+}
+```
+Illustrative message only; generated text varies. `generation_status` is `generated`
+or `fallback`; provider timeout/error/invalid output returns predefined nonclinical
+fallback text with 200. `context_sources` lists inputs supplied, not proof that
+specific statements were grounded in them.
+
+When present `forecast.data` contains `date`, `forecast_for`, `generated_at`
+(nullable ISO timestamp), `risk_level` (nullable), `flare_probability` (nullable),
+and at most five stored `contributing_factors`. Values come unchanged from the
+current user's latest stored forecast with run date no later than server-local today.
+`status` is `stale` if its target date is before server-local today, `current` if equal,
+or `future` if later. This is date relevance, not model accuracy or medical safety.
+Missing forecast is `unavailable`, not an error; no forecast is regenerated.
+The frontend must render dates/status with forecast values, including stale state;
+this endpoint neither supplies an acute assessment nor determines urgency.
+
+The selected configured `LLM_PROVIDER` and existing model settings are reused.
+There is no automatic cross-provider fallback. An outer 20-second deadline bounds
+waiting (SDK cancellation behavior depends on the existing provider client).
+No contacts, names or email addresses are selected for model context. By default
+only the user's message and dated stored forecast are sent. When the flag is true,
+current `care_goal`, `accessibility_needs`, `trigger_preferences`,
+`preferred_environment`, and the latest approved summary's text/date/save timestamp/
+source are also sent. Re-read on every call; corrected/deleted summaries cannot
+be recalled from an internal chat archive because none is created here.
+
+Frontend integration must explain that enabling saved context sends these fields
+to the configured AI provider. Approval to store a summary is not approval to send
+it; leave the flag false until that choice is made. Message text may itself contain
+private information. Backend does not persist prompts/replies or create episodes;
+provider retention is governed by its settings/terms, not a zero-retention claim.
+Use fictitious demo data. No new vendor, embedding, external calendar retrieval,
+new table, conversation storage or migration is introduced.
+
+Errors: 400 `VALIDATION_ERROR` with shared validation errors; 401
+`UNAUTHORIZED` for missing/invalid/expired authentication (existing auth contract).
+A valid token whose user no longer exists returns 404 `USER_NOT_FOUND`.
+Database failures are errors, not fabricated successful replies. No help action,
+zone, questionnaire, dispatch, notification or treatment instruction is returned.
+Output length/schema and bounded medication patterns are validated, but these
+checks and persona instructions do not prove every generated response safe.
+
+`persona` is optional `warm` (default), `calm`, or `direct`; response echoes it.
+Each maps to a fixed server-side tone fragment under identical safety instructions.
+No arbitrary system prompt is accepted. Invalid persona is 400.
+`generation_status` also includes `context_changed`: if selected saved context
+changes during generation, discard the generated reply and return static fallback;
+frontend may offer retry. Already-sent provider input cannot be retracted. Backend
+checks immediately before return; it cannot recall a reply already delivered.
+The endpoint is single-turn: visible UI history is not sent or stored here. Saved
+context supplies continuity across visits; this is not full multi-turn memory.
+Date relevance follows existing server-local `date.today()` convention; it may
+differ from a user's timezone. The persona/version are informational, not storage.

@@ -1,5 +1,53 @@
 # Tomorrow's existing-web-app implementation plan
 
+## Authorized supportive companion extension — current demo scope
+
+The latest demo request adds a warm, context-aware companion and a dated stored
+forecast within that interaction. This supersedes the earlier exclusion of LLM
+integration/forecast from the companion path below. Breathing-help backend work
+and any questionnaire are deferred until time permits; none is implemented by
+this extension. Existing trusted-contact support remains available through the
+existing profile API. No new clinical rules or emergency claims are introduced.
+
+Implemented backend: additive authenticated `POST /v1/companion/chat`, reusing
+existing provider SDK configuration, JWT/DB and cached forecast models. Existing
+`/v1/chat` and forecast generation remain unchanged. The existing chat UI now
+calls the new companion endpoint. No new
+schema or dependencies. Friendly, calm, concise persona is shared by this new
+endpoint's prompt; persona alone is not continuity. Request-opt-in saved context
+reads current user-confirmed profile fields and the latest approved summary.
+No full chat storage, episode recall, inferred memories or contact data sent to AI.
+Saving a summary and choosing to send saved context to the provider are distinct.
+
+Forecast is structured alongside the reply with source/target dates and explicit
+unavailable/stale/current/future state, based on server-local target-date relevance.
+It is not an acute breathing assessment. Missing forecast does not block chat;
+provider failure returns predefined nonclinical fallback. No automatic provider
+failover, new medical advice, help action, dispatch or alert delivery is added.
+See `asthma-app/docs/API.md` for exact requests, responses and integration notice.
+
+Backend files: `asthma-app/api/companion.py`, `services/companion_service.py`
+(under asthma-app), registration in `asthma-app/api/main.py`, and isolated
+`asthma-app/tests_demo/test_companion.py`. Seven companion tests plus six existing
+support tests pass with fake providers and disposable SQLite. This verifies
+scoping, opt-in/correction/deletion, dates, no writes, validation and fallbacks;
+it does not verify real model quality, clinical safety, live Postgres/provider
+availability, browser integration or end-to-end demo operation.
+
+The existing chat now calls the new endpoint with a Warm/Calm/Direct selector,
+optional saved-context checkbox and disclosure, dated forecast status and fallback
+status. Messages remain in session memory; account changes clear them and late
+responses are discarded. The UI explains single-turn behavior. Four mounted DOM
+tests with mocked fetch and 17 existing frontend tests pass; production build
+passes to /tmp. Run the DOM tests from frontend with
+`JSDOM_MODULE=/tmp/lobelia-ui-test-tools/node_modules/jsdom/lib/api.js node --test tests/companionChat.test.mjs`
+(after installing jsdom@26 into that temporary prefix); application dependencies
+are unchanged. No live model/API or visual browser verification was performed.
+Peyton's supplied asset and real runtime rehearsal remain outstanding. Test a
+fictitious approved summary across sessions, then correct/delete and repeat.
+PR16 remains separate; its Profile changes are not included here.
+
+
 ## Authorized continuity extension (current implementation contract)
 
 This extension supersedes earlier no-schema and future-memory exclusions below.
