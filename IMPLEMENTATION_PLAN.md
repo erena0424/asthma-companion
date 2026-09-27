@@ -1,4 +1,102 @@
+<!-- Current default update: supersedes earlier opt-in wording below. -->
+
+Companion chat now includes the current user's saved profile, approved summary and
+bounded today/tomorrow calendar plans by default. The chat checkbox and repeated
+provider disclosure paragraph have been removed. These selected fields and the
+message are processed by the configured AI provider; provider retention is not
+claimed to be zero. API callers can still send `include_saved_context: false`.
+No new storage or inference is introduced. Warm tone uses brief, specific,
+varied encouragement instead of repetitive advice; it must not invent feelings,
+health facts or reassuring outcomes. Calm/Direct remain available.
+
 # Tomorrow's existing-web-app implementation plan
+
+## Authorized supportive companion extension — current demo scope
+
+The latest demo request adds a warm, context-aware companion and a dated stored
+forecast within that interaction. This supersedes the earlier exclusion of LLM
+integration/forecast from the companion path below. Breathing-help backend work
+and any questionnaire are deferred until time permits; none is implemented by
+this extension. Existing trusted-contact support remains available through the
+existing profile API. No new clinical rules or emergency claims are introduced.
+
+Implemented backend: additive authenticated `POST /v1/companion/chat`, reusing
+existing provider SDK configuration, JWT/DB and cached forecast models. Existing
+`/v1/chat` and forecast generation remain unchanged. The existing chat UI now
+calls the new companion endpoint. No new
+schema or dependencies. Friendly, calm, concise persona is shared by this new
+endpoint's prompt; persona alone is not continuity. Request-opt-in saved context
+reads current user-confirmed profile fields, the latest approved summary, and
+bounded saved calendar plans for today and tomorrow (server-local date window).
+No full chat storage, episode recall, inferred memories or contact data sent to AI.
+Saving a summary and choosing to send saved context to the provider are distinct.
+
+Forecast is structured alongside the reply with source/target dates and explicit
+unavailable/stale/current/future state, based on server-local target-date relevance.
+It is not an acute breathing assessment. Missing forecast does not block chat;
+provider failure returns predefined nonclinical fallback. No automatic provider
+failover, new medical advice, help action, dispatch or alert delivery is added.
+See `asthma-app/docs/API.md` for exact requests, responses and integration notice.
+
+Backend files: `asthma-app/api/companion.py`, `services/companion_service.py`
+(under asthma-app), registration in `asthma-app/api/main.py`, and isolated
+`asthma-app/tests_demo/test_companion.py`. Eleven companion tests plus six existing
+support tests pass with fake providers and disposable SQLite. This verifies
+scoping, opt-in/correction/deletion, dates, no writes, validation and fallbacks;
+it does not verify real model quality, clinical safety, live Postgres/provider
+availability, browser integration or end-to-end demo operation.
+
+The chat sends up to four recent successful exchanges (8 alternating user/assistant
+messages, 1200 characters each, 6000 total), kept only in React memory. No full chat
+is saved to the database or browser storage. Static greetings, errors, fallback replies and
+unanswered messages are excluded. Clear Chat, account changes and saved-context
+opt-in changes reset eligible history; late replies are discarded. An opaque
+per-process context token binds history to the current authenticated user, opt-in,
+profile/summary, selected calendar plans and forecast. A missing/mismatched token discards history but still
+answers the current message. Corrections/deletions, forecast changes and server
+restart can reset continuity; different workers may also reset it. Current server
+context overrides historical model statements. Already displayed text is not
+retroactively erased by edits elsewhere. No technical forecast/status boilerplate
+is appended to bubbles; structured forecast metadata remains in the API and the
+model includes dates/uncertainty when relevant. This is bounded conversational
+continuity, not durable automatic memory. Saved approved summaries remain the
+separate optional cross-visit feature.
+
+Verification: 20 isolated backend tests (including calendar scope, dates, opt-in,
+correction/clear invalidation and in-flight changes), 9 mounted chat tests and 17 existing
+frontend tests; production build to /tmp. Mocked providers/disposable SQLite only;
+no live provider, Postgres or browser verification. Mounted tests run via
+`JSDOM_MODULE=/tmp/lobelia-ui-test-tools/node_modules/jsdom/lib/api.js node --test tests/companionChat.test.mjs`.
+Peyton's supplied asset and real runtime rehearsal remain outstanding. Test a
+fictitious approved summary across sessions, then correct/delete and repeat.
+PR16 remains separate; its Profile changes are not included here.
+
+
+## Forecast-led opening for the video demo
+
+Opening the visible floating chat or full chat page calls authenticated
+`POST /v1/companion/opening` once per in-memory conversation, using the selected
+tone and current saved-context opt-in. A hidden/collapsed chat makes no opening
+request. Navigation/re-render does not generate another greeting. Clear Chat
+cancels pending output and leaves a neutral greeting; it does not immediately
+call the model again; “Show my daily greeting” allows an explicit fresh request.
+Changing saved-context opt-in starts a new greeting with the new setting. Changing
+tone before any user message refreshes the greeting. Superseded requests cannot
+overwrite the new greeting, and hidden chat still makes no requests. Account changes reset this state. A failed opening shows
+a natural greeting with an explicit retry button; there is no automatic retry loop.
+
+The existing companion provider receives current cached forecast facts and
+instructions for 2–3 conversational sentences, retaining relevant dates and
+uncertainty without article titles or technical status boilerplate. No forecast
+calculation or advice-page behavior changes. Missing forecast can yield a simple
+greeting. Output quality still needs a live model/demo rehearsal.
+
+A successfully generated opening is held separately in React memory and sent as
+bounded, untrusted `opening_message` background on follow-ups, with the same
+context token checks as recent exchanges. It is not a user-authored message,
+approved memory or saved transcript. Clear/account/opt-in changes remove it;
+a rejected context revision or fallback also removes it from subsequent requests.
+
 
 ## Authorized continuity extension (current implementation contract)
 
@@ -177,3 +275,23 @@ If time is tight: static character, three existing fields plus optional note,
 one saved contact, two small routes. Drop animation/chat/automatic-memory/environment,
 notifications and new clinical plan storage. Do not drop honest save/error states
 or misrepresent a placeholder/phone handoff as a completed capability.
+
+## Saved plans in the companion opening
+
+`services/companion_service.py` now reads existing `CheckIn.calendar_event` and
+`calendar_events` fields for only the authenticated user's today/tomorrow rows.
+No new schema, calendar sync, or forecast generation. Up to three plan titles per
+date, 200 characters each; descriptions, locations, contacts and symptom fields
+are excluded. Structured entries need an explicit matching calendar date (or an
+all-day start date); ambiguous timed entries are omitted. The existing Calendar
+UI's free-text plan is included using its saved row date. These are user-reported
+plans, not attendance. No events is unknown, not an empty schedule.
+
+Both opening and chat include these plans only with `include_saved_context:true`.
+The opt-in label discloses calendar inclusion. Exact dates stay distinct from the
+forecast target date; user timezone is unknown. Edits/clears change the history
+token; changes during generation suppress the reply. The opening can acknowledge
+a saved plan with gentle nonmedical encouragement, never inventing BuildFest,
+medication instructions, attendance or environmental readings. For the demo, save
+a fictitious plan in Calendar on the intended date and enable saved context.
+Live model wording and browser rehearsal remain unverified.
